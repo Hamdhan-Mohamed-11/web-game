@@ -7,6 +7,7 @@ import { useLeaderboard } from "@/lib/realtime/useLeaderboard";
 import Scoreboard from "@/components/shared/Scoreboard";
 import Button from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
+import LiveQuestionStatus from "@/components/admin/LiveQuestionStatus";
 
 interface RoundAdminControlsProps {
   gameSlug: string;
@@ -98,13 +99,16 @@ export default function RoundAdminControls({
         </Button>
       </div>
 
-      {current && (
-        <p className="mb-3 text-sm text-ink-600">
-          Current: Question {current.questionIndex + 1} — &ldquo;{questionPrompt(current.questionIndex)}&rdquo;
-        </p>
-      )}
+      <LiveQuestionStatus
+        key={current?.id ?? "none"}
+        questionStateId={current?.id}
+        startedAt={current?.startedAt}
+        questionNumber={current ? current.questionIndex + 1 : undefined}
+        totalQuestions={round?.totalQuestions ?? 0}
+        prompt={current ? questionPrompt(current.questionIndex) : undefined}
+      />
 
-      <p className="mb-4 text-sm text-ink-600">
+      <p className="mb-4 mt-3 text-sm text-ink-600">
         {questionRows.filter((r) => r.startedAt).length} / {round?.totalQuestions ?? 0} questions started
       </p>
 

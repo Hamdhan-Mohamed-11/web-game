@@ -12,6 +12,9 @@ export interface RoundData {
   status: "pending" | "active" | "closed" | "confirmed";
 }
 
+/** Safety-net poll interval — see useQuestionState for the full rationale. */
+const RECONCILE_MS = 3000;
+
 export function useRound(gameSlug: string, roundKey: string) {
   const [round, setRound] = useState<RoundData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,11 +51,17 @@ export function useRound(gameSlug: string, roundKey: string) {
 
     load();
 
+    // Filter server-side on game_slug rather than receiving every game's
+    // round updates and discarding the irrelevant ones client-side.
+    // Supabase Realtime bills one message per receiving client, so an
+    // unfiltered subscription would spend quota delivering (say) Book Match
+    // events to every First Lines player. round_key still has to be checked
+    // in the handler because postgres_changes supports only one filter.
     const channel = supabase
       .channel(`round-${gameSlug}-${roundKey}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "rounds" },
+        { event: "UPDATE", schema: "public", table: "rounds", filter: `game_slug=eq.${gameSlug}` },
         (payload) => {
           const row = payload.new as {
             id: string;
@@ -62,7 +71,7 @@ export function useRound(gameSlug: string, roundKey: string) {
             total_questions: number;
             status: RoundData["status"];
           };
-          if (row.game_slug === gameSlug && row.round_key === roundKey) {
+          if (row.round_key === roundKey) {
             setRound({
               id: row.id,
               gameSlug: row.game_slug,
@@ -76,8 +85,21 @@ export function useRound(gameSlug: string, roundKey: string) {
       )
       .subscribe();
 
+    // Realtime messages are dropped (not queued) once a project exceeds its
+    // plan's messages/second quota, so a missed round transition would
+    // otherwise strand players — Book Match never leaving "waiting to
+    // start", or nobody seeing the winner reveal. Reconcile on a timer and
+    // whenever a backgrounded phone returns to the foreground.
+    const reconcile = setInterval(load, RECONCILE_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       cancelled = true;
+      clearInterval(reconcile);
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(channel);
     };
   }, [gameSlug, roundKey]);

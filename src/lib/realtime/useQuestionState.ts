@@ -11,10 +11,22 @@ export interface QuestionStateRow {
   closedAt: string | null;
 }
 
+/** Safety-net poll interval — see the note on RECONCILE_MS usage below. */
+const RECONCILE_MS = 3000;
+
 /**
  * All question_state rows for a round, kept in sync via Realtime. The
  * "current" question is derived as the highest-index row with a non-null
  * started_at — admin always advances forward, never reopens a prior one.
+ *
+ * Realtime is the fast path, but it is NOT guaranteed delivery: Supabase
+ * bills one message per receiving client and DROPS (does not queue) the
+ * overflow once a project exceeds its plan's messages/second quota. With a
+ * large room that means some phones would otherwise sit on "waiting for
+ * the quiz to start" for the entire question. The interval below reconciles
+ * missed events so a dropped message costs a few seconds rather than the
+ * whole round. Scoring is unaffected either way — points are computed
+ * server-side from started_at, never from when the client noticed.
  */
 export function useQuestionState(roundId: string | undefined) {
   const [rows, setRows] = useState<QuestionStateRow[]>([]);
@@ -62,8 +74,18 @@ export function useQuestionState(roundId: string | undefined) {
       )
       .subscribe();
 
+    const reconcile = setInterval(load, RECONCILE_MS);
+    // A backgrounded phone throttles timers, so also reconcile the moment
+    // it comes back to the foreground rather than waiting out the interval.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       cancelled = true;
+      clearInterval(reconcile);
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(channel);
     };
   }, [roundId]);

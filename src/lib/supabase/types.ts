@@ -141,6 +141,10 @@ export interface Database {
         Args: { p_game_slug: string };
         Returns: undefined;
       };
+      question_answer_stats: {
+        Args: { p_question_state_id: string };
+        Returns: { answered_count: number; participant_count: number }[];
+      };
     };
   };
 }

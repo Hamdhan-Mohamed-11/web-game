@@ -11,6 +11,7 @@ import Scoreboard from "@/components/shared/Scoreboard";
 import Button from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
 import BrandMark from "@/components/shared/BrandMark";
+import LiveQuestionStatus from "@/components/admin/LiveQuestionStatus";
 
 const GAME_SLUG = "first-lines";
 const meta = getGameMeta(GAME_SLUG)!;
@@ -109,13 +110,16 @@ export default function FirstLinesAdminPage() {
             </Button>
           </div>
 
-          {current && (
-            <p className="mb-3 text-sm text-ink-600">
-              Current: Question {current.questionIndex + 1} — &ldquo;{FIRST_LINES_QUESTIONS[current.questionIndex]?.line}&rdquo;
-            </p>
-          )}
+          <LiveQuestionStatus
+            key={current?.id ?? "none"}
+            questionStateId={current?.id}
+            startedAt={current?.startedAt}
+            questionNumber={current ? current.questionIndex + 1 : undefined}
+            totalQuestions={round?.totalQuestions ?? 0}
+            prompt={current ? FIRST_LINES_QUESTIONS[current.questionIndex]?.line : undefined}
+          />
 
-          <p className="text-sm text-ink-600">
+          <p className="mt-3 text-sm text-ink-600">
             {questionRows.filter((r) => r.startedAt).length} / {round?.totalQuestions ?? 0} questions started
           </p>
         </Card>
