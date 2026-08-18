@@ -1,13 +1,52 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "tailwindcss";
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/*
+ * Palette sampled directly from the Readers' Summit 2026 brand materials
+ * (Pick a Book) — this app is the quiz-night companion for that event, so
+ * it shares the brand's navy/gold/cream identity rather than a generic
+ * theme. Gold-500 fails WCAG contrast as text on light backgrounds
+ * (2.4:1) — reserve it for backgrounds/borders/icons, or text on navy.
+ * Use gold-700 for gold-colored text on light surfaces.
+ */
+@theme {
+  --font-display: var(--font-playfair), ui-serif, Georgia, serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-navy-950: #030f2e;
+  --color-navy-900: #072966;
+  --color-navy-800: #0d3980;
+  --color-navy-700: #164b9e;
+  --color-navy-100: #dce6f5;
+
+  --color-gold-700: #96611a;
+  --color-gold-600: #b8791f;
+  --color-gold-500: #e0982c;
+  --color-gold-400: #f0c868;
+  --color-gold-100: #fbedd1;
+
+  --color-cream-50: #fffbf3;
+  --color-cream-100: #fff5de;
+  --color-cream-200: #fcecc7;
+
+  --color-ink-900: #14213d;
+  --color-ink-600: #4a5568;
+  --color-ink-100: #e7eaf0;
+
+  --color-success-600: #1f8a5a;
+  --color-danger-600: #b3261e;
+
+  /* Book Match card palette — deliberately more playful/candy-bright than
+     the rest of the literary navy/gold system, per reference design. Used
+     only for the matching-game pills, cycled by a stable item index. */
+  --color-chip-pink: #ee5fa7;
+  --color-chip-green: #2fbf78;
+  --color-chip-amber: #f4c22b;
+  --color-chip-cyan: #29b6d8;
+  --color-chip-purple: #9b6bf2;
+  --color-chip-orange: #ff9142;
+
+  --shadow-card: 0 1px 2px rgba(7, 41, 102, 0.06), 0 8px 24px -8px rgba(7, 41, 102, 0.18);
+  --shadow-gold: 0 8px 24px -6px rgba(224, 152, 44, 0.45);
 }
 
 html {
@@ -22,28 +61,49 @@ body {
 
 body {
   min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--color-ink-900);
+  background: var(--color-cream-50);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
-  margin: 0;
 }
 
 a {
   color: inherit;
-  text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.5); }
+  60% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.animate-pop-in {
+  animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Respect reduced-motion globally; components additionally gate their own
+   GSAP timelines behind this same query. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
