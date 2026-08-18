@@ -6,6 +6,7 @@ import { TOTAL_PAIRS } from "@/lib/scoring/bookmatch";
 import { getGameMeta } from "@/lib/games";
 import Scoreboard from "@/components/shared/Scoreboard";
 import WinnerReveal from "@/components/screen/WinnerReveal";
+import { TrophyIcon } from "@/components/shared/icons";
 
 const GAME_SLUG = "book-match";
 const meta = getGameMeta(GAME_SLUG)!;
@@ -35,8 +36,14 @@ export default function BookMatchScreenPage() {
 
   return (
     <main className="min-h-screen bg-navy-950 px-10 py-10">
-      <h1 className="mb-10 font-display text-4xl font-bold text-white">{meta.name}</h1>
-      <h2 className="mb-4 text-xl font-semibold uppercase tracking-widest text-gold-400">Live Top 10</h2>
+      <h1 className="mb-10 font-display text-4xl font-bold text-white">
+        The <span className="text-gold-400">Book Match</span> Challenge
+      </h1>
+      <div className="mb-1 flex items-center gap-2">
+        <TrophyIcon className="h-6 w-6 text-gold-400" />
+        <h2 className="text-xl font-semibold uppercase tracking-widest text-gold-400">Live Top 10</h2>
+      </div>
+      <div className="mb-6 h-px w-40 bg-gradient-to-r from-gold-500 to-transparent" />
       <div className="mx-auto max-w-2xl">
         <Scoreboard rows={rows} showProgress progressTotal={TOTAL_PAIRS} theme="dark" />
       </div>

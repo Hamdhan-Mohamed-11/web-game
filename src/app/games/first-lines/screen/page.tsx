@@ -8,6 +8,7 @@ import { getGameMeta } from "@/lib/games";
 import CountdownTimer from "@/components/shared/CountdownTimer";
 import Scoreboard from "@/components/shared/Scoreboard";
 import WinnerReveal from "@/components/screen/WinnerReveal";
+import { TrophyIcon } from "@/components/shared/icons";
 
 const GAME_SLUG = "first-lines";
 const meta = getGameMeta(GAME_SLUG)!;
@@ -39,7 +40,9 @@ export default function FirstLinesScreenPage() {
   return (
     <main className="min-h-screen bg-navy-950 px-10 py-10">
       <div className="mb-10 flex items-start justify-between">
-        <h1 className="font-display text-4xl font-bold text-white">{meta.name}</h1>
+        <h1 className="font-display text-4xl font-bold text-white">
+          The Famous <span className="text-gold-400">First Lines</span> Challenge
+        </h1>
         {current && (
           <div className="flex items-center gap-6 text-right">
             <div>
@@ -52,7 +55,11 @@ export default function FirstLinesScreenPage() {
         )}
       </div>
 
-      <h2 className="mb-4 text-xl font-semibold uppercase tracking-widest text-gold-400">Live Top 10</h2>
+      <div className="mb-1 flex items-center gap-2">
+        <TrophyIcon className="h-6 w-6 text-gold-400" />
+        <h2 className="text-xl font-semibold uppercase tracking-widest text-gold-400">Live Top 10</h2>
+      </div>
+      <div className="mb-6 h-px w-40 bg-gradient-to-r from-gold-500 to-transparent" />
       <div className="mx-auto max-w-2xl">
         <Scoreboard rows={rows} theme="dark" />
       </div>

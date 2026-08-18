@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import type { LeaderboardRow } from "@/lib/realtime/useLeaderboard";
+import { CrownIcon } from "@/components/shared/icons";
 
 interface ScoreboardProps {
   rows: LeaderboardRow[];
@@ -11,10 +12,12 @@ interface ScoreboardProps {
   theme?: "light" | "dark";
 }
 
-const RANK_BADGE: Record<number, string> = {
-  0: "bg-gold-500 text-navy-950",
-  1: "bg-navy-100 text-navy-900",
-  2: "bg-gold-100 text-gold-700",
+// Only the top 3 get medal treatment — everyone else keeps the plain
+// numbered badge.
+const MEDAL_BADGE: Record<number, string> = {
+  0: "bg-gold-500 text-navy-950 ring-2 ring-gold-300",
+  1: "bg-silver-400 text-navy-900 ring-2 ring-white/60",
+  2: "bg-bronze-500 text-white ring-2 ring-bronze-500/40",
 };
 
 /**
@@ -77,13 +80,18 @@ export default function Scoreboard({ rows, showProgress = false, progressTotal, 
           }}
           className={`flex items-center gap-3 rounded-xl px-4 py-3 ${
             theme === "dark" ? "bg-white/5 backdrop-blur-sm" : "bg-white border border-navy-100 shadow-card"
-          } ${i < 3 ? "py-4" : ""}`}
+          } ${i < 3 ? "py-4" : ""} ${
+            i === 0 && theme === "dark" ? "border border-gold-500/50 shadow-[0_0_28px_-6px_rgba(224,152,44,0.5)]" : ""
+          } ${i === 0 && theme === "light" ? "border-2 border-gold-400" : ""}`}
         >
           <span
-            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold ${
-              RANK_BADGE[i] ?? (theme === "dark" ? "bg-white/10 text-white/70" : "bg-cream-200 text-ink-600")
+            className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold ${
+              MEDAL_BADGE[i] ?? (theme === "dark" ? "bg-white/10 text-white/70" : "bg-cream-200 text-ink-600")
             }`}
           >
+            {i === 0 && (
+              <CrownIcon className="absolute -top-3.5 left-1/2 h-4 w-4 -translate-x-1/2 text-gold-500" />
+            )}
             {i + 1}
           </span>
           <span

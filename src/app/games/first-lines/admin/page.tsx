@@ -10,6 +10,7 @@ import { getGameMeta } from "@/lib/games";
 import Scoreboard from "@/components/shared/Scoreboard";
 import Button from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
+import BrandMark from "@/components/shared/BrandMark";
 
 const GAME_SLUG = "first-lines";
 const meta = getGameMeta(GAME_SLUG)!;
@@ -72,6 +73,9 @@ export default function FirstLinesAdminPage() {
   return (
     <main className="min-h-screen bg-cream-50 px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-2xl">
+        <div className="mb-6 flex justify-center">
+          <BrandMark />
+        </div>
         <Link href="/admin" className="mb-4 inline-block text-sm text-ink-600 hover:text-navy-900">
           ← Back to admin hub
         </Link>
