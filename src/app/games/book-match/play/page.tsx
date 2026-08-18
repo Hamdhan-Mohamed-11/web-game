@@ -8,6 +8,7 @@ import { getGameMeta } from "@/lib/games";
 import JoinForm from "@/components/participant/JoinForm";
 import MatchBoard from "@/components/participant/MatchBoard";
 import BrandMark from "@/components/shared/BrandMark";
+import Button from "@/components/shared/Button";
 
 const GAME_SLUG = "book-match";
 const meta = getGameMeta(GAME_SLUG)!;
@@ -40,17 +41,37 @@ export default function BookMatchPlayPage() {
   const { session, matchedItemKeys, loaded, checkIn } = useBookMatchSession(round?.id, participant?.id);
   const [ceremonyDone, setCeremonyDone] = useState(false);
   const [finalPoints, setFinalPoints] = useState<number | null>(null);
-  const [checkingIn, setCheckingIn] = useState(false);
+  const [checkInError, setCheckInError] = useState<string | null>(null);
+  const [checkInAttempt, setCheckInAttempt] = useState(0);
 
   useEffect(() => {
-    if (ceremonyDone && !session && !checkingIn) {
-      // Guards a one-shot async RPC (checkIn) behind a synchronous flag so
-      // the effect can't fire it twice while the request is in flight.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCheckingIn(true);
-      checkIn().catch(() => setCheckingIn(false));
-    }
-  }, [ceremonyDone, session, checkingIn, checkIn]);
+    if (!ceremonyDone || session) return;
+
+    let cancelled = false;
+    // Clears any error left over from a previous failed attempt before retrying.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCheckInError(null);
+
+    Promise.race([
+      checkIn(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Taking too long to connect — check your signal and try again.")), 10000)
+      ),
+    ])
+      .catch((err) => {
+        if (cancelled) return;
+        setCheckInError(err instanceof Error ? err.message : "Couldn't join the board — try again.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // session/checkIn intentionally excluded: session is read once per
+    // attempt (checkIn is the only thing that ever sets it, so re-running
+    // this effect when it changes would be redundant), and checkIn is a
+    // stable callback for a given round/participant pair.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ceremonyDone, checkInAttempt]);
 
   if (!ready) return null;
 
@@ -104,8 +125,24 @@ export default function BookMatchPlayPage() {
 
   if (!session) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-cream-50 text-ink-600">
-        Getting your board ready…
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-cream-50 px-6 text-center">
+        <BrandMark size="compact" />
+        {checkInError ? (
+          <>
+            <p className="text-danger-600">{checkInError}</p>
+            <Button
+              variant="gold"
+              onClick={() => {
+                setCheckInError(null);
+                setCheckInAttempt((n) => n + 1);
+              }}
+            >
+              Try again
+            </Button>
+          </>
+        ) : (
+          <p className="text-ink-600">Getting your board ready…</p>
+        )}
       </main>
     );
   }

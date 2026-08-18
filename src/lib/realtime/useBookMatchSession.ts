@@ -28,28 +28,38 @@ export function useBookMatchSession(roundId: string | undefined, participantId: 
     const supabase = getBrowserSupabaseClient();
 
     async function load() {
-      const { data } = await supabase
-        .from("book_match_sessions")
-        .select("id, started_at, ends_at, is_finished")
-        .eq("round_id", roundId as string)
-        .eq("participant_id", participantId as string)
-        .maybeSingle();
+      // A thrown (not just error-envelope) failure here — e.g. a dropped
+      // mobile connection — must still resolve `loaded`, or the page is
+      // stuck blank forever with no way for the participant to retry.
+      // Treating it as "no cached session" is safe: checkIn()'s upsert is
+      // idempotent, so if a session already existed server-side it's simply
+      // returned again rather than duplicated.
+      try {
+        const { data } = await supabase
+          .from("book_match_sessions")
+          .select("id, started_at, ends_at, is_finished")
+          .eq("round_id", roundId as string)
+          .eq("participant_id", participantId as string)
+          .maybeSingle();
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (data) {
-        setSession({ id: data.id, startedAt: data.started_at, endsAt: data.ends_at, isFinished: data.is_finished });
+        if (data) {
+          setSession({ id: data.id, startedAt: data.started_at, endsAt: data.ends_at, isFinished: data.is_finished });
 
-        const { data: progress } = await supabase
-          .from("book_match_progress")
-          .select("item_key")
-          .eq("book_match_session_id", data.id);
+          const { data: progress } = await supabase
+            .from("book_match_progress")
+            .select("item_key")
+            .eq("book_match_session_id", data.id);
 
-        if (!cancelled && progress) {
-          setMatchedItemKeys(new Set(progress.map((p) => p.item_key)));
+          if (!cancelled && progress) {
+            setMatchedItemKeys(new Set(progress.map((p) => p.item_key)));
+          }
         }
+      } catch {
+        // Fall through to setLoaded(true) below regardless.
       }
-      setLoaded(true);
+      if (!cancelled) setLoaded(true);
     }
 
     load();
