@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browserClient";
 import { QUESTION_DURATION_MS } from "@/lib/scoring/lockstep";
 import CountdownTimer from "@/components/shared/CountdownTimer";
+import BrandMark from "@/components/shared/BrandMark";
 
 interface QuestionCardProps {
   questionStateId: string;
@@ -57,6 +58,9 @@ export default function QuestionCard({
   return (
     <main className="flex min-h-screen flex-col bg-cream-50 px-5 pb-10 pt-6">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
+        <div className="mb-4 flex justify-center">
+          <BrandMark size="compact" />
+        </div>
         <div className="mb-6 flex items-center justify-between">
           <span className="rounded-full bg-navy-900 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
             Question {questionNumber} / {totalQuestions}

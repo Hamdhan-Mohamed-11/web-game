@@ -5,6 +5,7 @@ import { getBrowserSupabaseClient } from "@/lib/supabase/browserClient";
 import { BOOK_MATCH_ITEMS, BOOK_MATCH_OPTIONS } from "@/lib/data/bookMatch.items";
 import { MATCH_ROUND_DURATION_MS, TOTAL_PAIRS } from "@/lib/scoring/bookmatch";
 import CountdownTimer from "@/components/shared/CountdownTimer";
+import BrandMark from "@/components/shared/BrandMark";
 
 function shuffled<T>(items: readonly T[]): T[] {
   const copy = [...items];
@@ -15,11 +16,10 @@ function shuffled<T>(items: readonly T[]): T[] {
   return copy;
 }
 
-// Playful candy-bright palette for the matching pills — deliberately more
-// vibrant than the rest of the literary navy/gold system, per reference
-// design. Colors are keyed by each item's stable index in the source data
-// (not its rendered position), so a card's color never shifts as other
-// cards around it get matched and removed.
+// Playful candy-bright palette for the item pills only — the options column
+// is deliberately a single uniform style (see OPTION_STYLE below) so it
+// doesn't read as "paired by color" with a same-row item; they're matched
+// by tapping, not by position or color.
 const CHIP_STYLES = [
   { bg: "bg-chip-pink", text: "text-white" },
   { bg: "bg-chip-green", text: "text-white" },
@@ -29,12 +29,19 @@ const CHIP_STYLES = [
   { bg: "bg-chip-orange", text: "text-white" },
 ];
 
-const ITEM_COLOR_INDEX = new Map(BOOK_MATCH_ITEMS.map((item, i) => [item.itemKey, i]));
-const OPTION_COLOR_INDEX = new Map(BOOK_MATCH_OPTIONS.map((opt, i) => [opt.itemKey, i]));
+const OPTION_STYLE = "bg-white text-navy-900 border border-navy-100";
 
-function chipStyle(key: string, index: Map<string, number>) {
-  const i = index.get(key) ?? 0;
+const ITEM_COLOR_INDEX = new Map(BOOK_MATCH_ITEMS.map((item, i) => [item.itemKey, i]));
+
+function chipStyle(key: string) {
+  const i = ITEM_COLOR_INDEX.get(key) ?? 0;
   return CHIP_STYLES[i % CHIP_STYLES.length];
+}
+
+function vibrate(pattern: number | number[]) {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    navigator.vibrate(pattern);
+  }
 }
 
 interface MatchBoardProps {
@@ -101,6 +108,7 @@ export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKey
       }
     } else {
       setWrongPulse(itemKey);
+      vibrate(200);
       setTimeout(() => setWrongPulse(null), 400);
     }
   }
@@ -126,6 +134,10 @@ export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKey
   return (
     <main className="min-h-screen bg-cream-50 px-3 pb-10 pt-6">
       <div className="mx-auto max-w-lg">
+        <div className="mb-4 flex justify-center">
+          <BrandMark size="compact" />
+        </div>
+
         <div className="mb-5 flex items-center justify-between px-1">
           <span className="rounded-full bg-navy-900 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
             {progress}/{TOTAL_PAIRS} matched
@@ -136,49 +148,38 @@ export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKey
         <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
           <div className="flex flex-col gap-2.5">
             {remainingItems.map((item) => {
-              const style = chipStyle(item.itemKey, ITEM_COLOR_INDEX);
+              const style = chipStyle(item.itemKey);
               const isSelected = selectedItemKey === item.itemKey;
               return (
                 <button
                   key={item.itemKey}
                   onClick={() => handleSelectItem(item.itemKey)}
                   disabled={done}
-                  className={`relative min-h-[48px] rounded-full py-2.5 pl-4 pr-5 text-left text-xs font-bold leading-tight shadow-md transition-all duration-200 sm:text-sm ${style.bg} ${style.text} ${
+                  className={`flex min-h-16 items-center rounded-2xl px-4 py-2.5 text-left text-xs font-bold leading-tight shadow-md transition-all duration-200 sm:text-sm ${style.bg} ${style.text} ${
                     wrongPulse === item.itemKey ? "animate-shake" : ""
                   } ${justMatched === item.itemKey ? "scale-90 opacity-0" : ""} ${
                     isSelected ? "scale-105 ring-4 ring-navy-900 ring-offset-2 ring-offset-cream-50" : ""
                   } ${done ? "cursor-default" : "cursor-pointer active:scale-95"}`}
                 >
                   {item.label}
-                  <span
-                    aria-hidden="true"
-                    className={`absolute top-1/2 -right-1.5 h-3.5 w-3.5 -translate-y-1/2 rounded-full border-2 border-cream-50 shadow-sm ${style.bg}`}
-                  />
                 </button>
               );
             })}
           </div>
 
           <div className="flex flex-col gap-2.5">
-            {remainingOptions.map((option) => {
-              const style = chipStyle(option.itemKey, OPTION_COLOR_INDEX);
-              return (
-                <button
-                  key={option.itemKey}
-                  onClick={() => handleSelectOption(option.itemKey)}
-                  disabled={done || !selectedItemKey}
-                  className={`relative min-h-[48px] rounded-full py-2.5 pl-5 pr-4 text-left text-xs font-bold leading-tight shadow-md transition-opacity duration-200 sm:text-sm ${style.bg} ${style.text} ${
-                    done || !selectedItemKey ? "cursor-default opacity-40" : "cursor-pointer active:scale-95"
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`absolute top-1/2 -left-1.5 h-3.5 w-3.5 -translate-y-1/2 rounded-full border-2 border-cream-50 shadow-sm ${style.bg}`}
-                  />
-                  {option.label}
-                </button>
-              );
-            })}
+            {remainingOptions.map((option) => (
+              <button
+                key={option.itemKey}
+                onClick={() => handleSelectOption(option.itemKey)}
+                disabled={done || !selectedItemKey}
+                className={`flex min-h-16 items-center rounded-2xl px-4 py-2.5 text-left text-xs font-bold leading-tight shadow-md transition-opacity duration-200 sm:text-sm ${OPTION_STYLE} ${
+                  done || !selectedItemKey ? "cursor-default opacity-40" : "cursor-pointer active:scale-95"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
 
