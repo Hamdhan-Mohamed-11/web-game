@@ -20,7 +20,7 @@ export const GAMES: readonly GameMeta[] = [
   {
     slug: "book-match",
     name: "The Book Match Challenge",
-    tagline: "12 book-related matches, 75 seconds",
+    tagline: "10 book-related matches, 75 seconds",
   },
 ];
 
