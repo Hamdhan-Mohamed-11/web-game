@@ -31,10 +31,13 @@ export default function QuestionCard({
   const [lockedChoice, setLockedChoice] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [expired, setExpired] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
 
   async function handleAnswer(choiceIndex: number) {
-    if (lockedChoice !== null || submitting || expired) return;
+    if (confirmed || submitting || expired) return;
     setSubmitting(true);
+    setSubmitError(null);
     setLockedChoice(choiceIndex);
 
     const supabase = getBrowserSupabaseClient();
@@ -45,15 +48,32 @@ export default function QuestionCard({
     });
 
     setSubmitting(false);
-    if (error) {
-      // Most likely "already answered" or "question is closed" — either way
-      // the lock stays in place, there's nothing useful for the player to
-      // retry, so just stop here silently.
+
+    if (!error) {
+      setConfirmed(true);
       return;
     }
+
+    // "already answered" means the server has a score for this player on
+    // this question — the outcome we wanted, so treat it as success.
+    if (error.message.includes("already answered")) {
+      setConfirmed(true);
+      return;
+    }
+
+    // Anything else genuinely failed to score. Never swallow it: a silent
+    // failure here showed "Answer locked in" while the player banked
+    // nothing, which is exactly how a whole round can be lost without
+    // anyone noticing. Unlock so they can try again.
+    setLockedChoice(null);
+    setSubmitError(
+      error.message.includes("question is closed")
+        ? "Too slow — that question closed."
+        : "That didn't save. Tap your answer again."
+    );
   }
 
-  const isLocked = lockedChoice !== null || expired;
+  const isLocked = confirmed || expired;
 
   return (
     <main
@@ -81,7 +101,7 @@ export default function QuestionCard({
               <button
                 key={i}
                 onClick={() => handleAnswer(i)}
-                disabled={isLocked}
+                disabled={isLocked || submitting}
                 className={`min-h-[56px] rounded-xl border px-4 py-4 text-left text-base font-medium transition-all duration-200 ${
                   isSelected
                     ? "border-navy-900 bg-navy-900 text-white shadow-card"
@@ -95,9 +115,19 @@ export default function QuestionCard({
           })}
         </div>
 
-        {isLocked && (
+        {submitError && (
+          <p className="mt-6 text-center text-sm font-medium text-danger-600" role="alert">
+            {submitError}
+          </p>
+        )}
+
+        {!submitError && submitting && (
+          <p className="mt-6 text-center text-sm text-ink-600">Saving your answer…</p>
+        )}
+
+        {!submitError && !submitting && isLocked && (
           <p className="mt-6 text-center text-sm text-ink-600">
-            {expired && lockedChoice === null ? "Time's up." : "Answer locked in — waiting for the next question…"}
+            {expired && !confirmed ? "Time's up." : "Answer locked in — waiting for the next question…"}
           </p>
         )}
       </div>
