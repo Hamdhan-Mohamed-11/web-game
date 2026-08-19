@@ -44,7 +44,7 @@ export default function ScreenShell({
             width={826}
             height={349}
             priority
-            className="h-auto w-32 lg:w-44 2xl:w-52"
+            className="h-auto w-44 lg:w-64 2xl:w-80"
           />
         </div>
 

@@ -56,7 +56,11 @@ export default function QuestionCard({
   const isLocked = lockedChoice !== null || expired;
 
   return (
-    <main className="flex min-h-screen flex-col bg-cream-50 px-5 pb-10 pt-6">
+    <main
+      className="no-copy flex min-h-screen flex-col bg-cream-50 px-5 pb-10 pt-6"
+      onContextMenu={(e) => e.preventDefault()}
+      onCopy={(e) => e.preventDefault()}
+    >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
         <div className="mb-4 flex justify-center">
           <BrandMark size="compact" />

@@ -14,7 +14,7 @@ export default function BrandMark({ tagline, size = "default" }: BrandMarkProps)
         width={826}
         height={349}
         priority
-        className={size === "compact" ? "h-auto w-28 sm:w-32" : "h-auto w-56 sm:w-64"}
+        className={size === "compact" ? "h-auto w-32 sm:w-40" : "h-auto w-72 sm:w-80 lg:w-96"}
       />
       {tagline && <span className="mt-2 text-sm text-ink-600">{tagline}</span>}
     </div>

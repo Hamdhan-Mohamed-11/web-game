@@ -42,7 +42,7 @@ export default function RoundAdminControls({
   const [error, setError] = useState<string | null>(null);
 
   const nextIndex = current ? current.questionIndex + 1 : 0;
-  const isLastQuestion = round ? nextIndex >= round.totalQuestions : false;
+  const allQuestionsStarted = round ? current !== null && nextIndex >= round.totalQuestions : false;
   const isFinalQuestionOpen = current !== null && current.questionIndex === (round?.totalQuestions ?? 0) - 1;
 
   async function run(fn: () => Promise<void>) {
@@ -83,13 +83,20 @@ export default function RoundAdminControls({
 
       {error && <p className="mb-3 text-sm text-danger-600">{error}</p>}
 
-      <div className="mb-4 flex flex-wrap gap-3">
-        <Button
-          onClick={handleStartNext}
-          disabled={busy || !round || round.status === "confirmed" || (isLastQuestion && current !== null)}
-        >
-          {current ? `Start Question ${nextIndex + 1}` : "Start Question 1"}
-        </Button>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        {/* Once every question in this round has been started there is no
+            "next question" — showing a permanently-disabled "Start Question
+            7" button just looks broken, so it's replaced with the actual
+            state and the operator's attention moves to the next control. */}
+        {allQuestionsStarted ? (
+          <span className="inline-flex min-h-[44px] items-center rounded-xl bg-cream-200 px-4 text-sm font-semibold text-ink-600">
+            All {round?.totalQuestions ?? 0} questions done
+          </span>
+        ) : (
+          <Button onClick={handleStartNext} disabled={busy || !round || round.status === "confirmed"}>
+            {current ? `Start Question ${nextIndex + 1}` : "Start Question 1"}
+          </Button>
+        )}
         <Button
           variant="gold"
           onClick={handleConfirmWinners}

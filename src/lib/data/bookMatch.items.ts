@@ -7,6 +7,9 @@ export interface BookMatchItem {
   label: string;
 }
 
+// 10 pairs, trimmed from 12 so the whole board fits one phone screen with
+// no scrolling. Keeps all three pair types represented: 4 book→author,
+// 3 book→character, 3 book→idea.
 export const BOOK_MATCH_ITEMS: readonly BookMatchItem[] = [
   { itemKey: "charlie-chocolate-factory", label: "Charlie and the Chocolate Factory" },
   { itemKey: "fault-in-our-stars", label: "The Fault in Our Stars" },
@@ -15,9 +18,7 @@ export const BOOK_MATCH_ITEMS: readonly BookMatchItem[] = [
   { itemKey: "matilda", label: "Matilda" },
   { itemKey: "dune", label: "Dune" },
   { itemKey: "alice-wonderland", label: "Alice's Adventures in Wonderland" },
-  { itemKey: "lion-witch-wardrobe", label: "The Lion, the Witch and the Wardrobe" },
   { itemKey: "who-moved-my-cheese", label: "Who Moved My Cheese?" },
-  { itemKey: "ikigai", label: "Ikigai" },
   { itemKey: "rich-dad-poor-dad", label: "Rich Dad Poor Dad" },
   { itemKey: "how-to-win-friends", label: "How to Win Friends and Influence People" },
 ];
@@ -33,9 +34,7 @@ export const BOOK_MATCH_OPTIONS: readonly BookMatchItem[] = [
   { itemKey: "char-matilda-wormwood", label: "Matilda Wormwood" },
   { itemKey: "char-paul-atreides", label: "Paul Atreides" },
   { itemKey: "char-alice", label: "Alice" },
-  { itemKey: "char-lucy-pevensie", label: "Lucy Pevensie" },
   { itemKey: "idea-adapting-to-change", label: "Adapting positively to change" },
-  { itemKey: "idea-purpose-meaning", label: "Finding purpose and meaning in life" },
   { itemKey: "idea-financial-literacy", label: "Financial literacy and assets vs. liabilities" },
   { itemKey: "idea-relationships-communication", label: "Building better relationships and communication" },
 ];

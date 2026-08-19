@@ -149,6 +149,10 @@ export interface Database {
         Args: { p_game_slug: string | null };
         Returns: undefined;
       };
+      server_now: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
     };
   };
 }

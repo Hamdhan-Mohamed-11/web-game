@@ -87,6 +87,17 @@ body {
   }
 }
 
+/* Applied to live question text and answer options. Raises the effort of
+   copy-pasting a question into an AI mid-round — a determined person can
+   still retype it or screenshot, so this is friction, not real protection.
+   Deliberately NOT applied app-wide: admins need to select text, and
+   killing selection everywhere would break normal use of the site. */
+.no-copy {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 @keyframes shake {
   10%, 90% { transform: translateX(-1px); }
   20%, 80% { transform: translateX(2px); }

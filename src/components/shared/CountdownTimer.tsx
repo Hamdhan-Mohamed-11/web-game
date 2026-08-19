@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ensureClockSynced, serverNow } from "@/lib/realtime/serverClock";
 
 interface CountdownTimerProps {
   startedAt: string | null;
@@ -32,9 +33,12 @@ export default function CountdownTimer({
     const startedAtMs = new Date(startedAt).getTime();
     let expired = false;
 
+    // serverNow() rather than Date.now(): started_at comes from the
+    // database's clock, so a skewed display device would otherwise render
+    // a completely different number than the phones in the room.
     function tick() {
-      const elapsed = Date.now() - startedAtMs;
-      const remaining = Math.max(0, durationMs - elapsed);
+      const elapsed = serverNow() - startedAtMs;
+      const remaining = Math.max(0, Math.min(durationMs, durationMs - elapsed));
       setRemainingMs(remaining);
       if (remaining === 0 && !expired) {
         expired = true;
@@ -42,7 +46,11 @@ export default function CountdownTimer({
       }
     }
 
+    // Paint immediately from whatever offset we have, then re-tick once the
+    // sync lands so a cold start doesn't show a wrong number for a moment.
     tick();
+    ensureClockSynced().then(tick);
+
     const interval = setInterval(tick, 200);
     document.addEventListener("visibilitychange", tick);
 

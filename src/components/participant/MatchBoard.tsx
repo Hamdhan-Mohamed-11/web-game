@@ -132,21 +132,33 @@ export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKey
   }, [timeUp, sessionId]);
 
   return (
-    <main className="min-h-screen bg-cream-50 px-3 pb-10 pt-6">
-      <div className="mx-auto max-w-lg">
-        <div className="mb-4 flex justify-center">
+    // h-dvh (not min-h-screen) plus overflow-hidden: the whole board has to
+    // sit inside one phone viewport with no scrolling, and dvh accounts for
+    // mobile browser chrome that 100vh ignores. The rows below flex to fill
+    // whatever height is left after the header.
+    <main
+      className="no-copy flex h-dvh flex-col overflow-hidden bg-cream-50 px-3 pb-3 pt-3"
+      onContextMenu={(e) => e.preventDefault()}
+      onCopy={(e) => e.preventDefault()}
+    >
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col overflow-hidden">
+        <div className="flex shrink-0 items-center justify-between gap-3 pb-2">
           <BrandMark size="compact" />
+          <div className="flex items-center gap-3">
+            <span className="rounded-full bg-navy-900 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
+              {progress}/{TOTAL_PAIRS}
+            </span>
+            <CountdownTimer
+              startedAt={startedAt}
+              durationMs={MATCH_ROUND_DURATION_MS}
+              onExpire={handleExpire}
+              size={48}
+            />
+          </div>
         </div>
 
-        <div className="mb-5 flex items-center justify-between px-1">
-          <span className="rounded-full bg-navy-900 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
-            {progress}/{TOTAL_PAIRS} matched
-          </span>
-          <CountdownTimer startedAt={startedAt} durationMs={MATCH_ROUND_DURATION_MS} onExpire={handleExpire} size={56} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
-          <div className="flex flex-col gap-2.5">
+        <div className="grid min-h-0 flex-1 grid-cols-2 gap-x-2.5">
+          <div className="flex min-h-0 flex-col justify-between gap-1.5 py-1">
             {remainingItems.map((item) => {
               const style = chipStyle(item.itemKey);
               const isSelected = selectedItemKey === item.itemKey;
@@ -155,10 +167,10 @@ export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKey
                   key={item.itemKey}
                   onClick={() => handleSelectItem(item.itemKey)}
                   disabled={done}
-                  className={`flex min-h-16 items-center rounded-2xl px-4 py-2.5 text-left text-xs font-bold leading-tight shadow-md transition-all duration-200 sm:text-sm ${style.bg} ${style.text} ${
+                  className={`flex min-h-0 flex-1 items-center rounded-xl px-3 text-left text-[11px] font-bold leading-[1.15] shadow-md transition-all duration-200 sm:text-sm ${style.bg} ${style.text} ${
                     wrongPulse === item.itemKey ? "animate-shake" : ""
                   } ${justMatched === item.itemKey ? "scale-90 opacity-0" : ""} ${
-                    isSelected ? "scale-105 ring-4 ring-navy-900 ring-offset-2 ring-offset-cream-50" : ""
+                    isSelected ? "scale-[1.03] ring-4 ring-navy-900 ring-offset-2 ring-offset-cream-50" : ""
                   } ${done ? "cursor-default" : "cursor-pointer active:scale-95"}`}
                 >
                   {item.label}
@@ -167,13 +179,13 @@ export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKey
             })}
           </div>
 
-          <div className="flex flex-col gap-2.5">
+          <div className="flex min-h-0 flex-col justify-between gap-1.5 py-1">
             {remainingOptions.map((option) => (
               <button
                 key={option.itemKey}
                 onClick={() => handleSelectOption(option.itemKey)}
                 disabled={done || !selectedItemKey}
-                className={`flex min-h-16 items-center rounded-2xl px-4 py-2.5 text-left text-xs font-bold leading-tight shadow-md transition-opacity duration-200 sm:text-sm ${OPTION_STYLE} ${
+                className={`flex min-h-0 flex-1 items-center rounded-xl px-3 text-left text-[11px] font-bold leading-[1.15] shadow-md transition-opacity duration-200 sm:text-sm ${OPTION_STYLE} ${
                   done || !selectedItemKey ? "cursor-default opacity-40" : "cursor-pointer active:scale-95"
                 }`}
               >
@@ -184,7 +196,7 @@ export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKey
         </div>
 
         {done && (
-          <p className="mt-6 text-center font-display text-lg font-semibold text-navy-900">
+          <p className="shrink-0 pt-2 text-center font-display text-lg font-semibold text-navy-900">
             {progress >= TOTAL_PAIRS ? "All matched!" : "Time's up."}
           </p>
         )}
