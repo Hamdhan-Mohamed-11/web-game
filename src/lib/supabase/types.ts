@@ -11,9 +11,9 @@ export interface Database {
   public: {
     Tables: {
       games: {
-        Row: { slug: string; display_name: string };
-        Insert: { slug: string; display_name: string };
-        Update: Partial<{ slug: string; display_name: string }>;
+        Row: { slug: string; display_name: string; is_unlocked: boolean };
+        Insert: { slug: string; display_name: string; is_unlocked?: boolean };
+        Update: Partial<{ slug: string; display_name: string; is_unlocked: boolean }>;
         Relationships: [];
       };
       rounds: {
@@ -144,6 +144,10 @@ export interface Database {
       question_answer_stats: {
         Args: { p_question_state_id: string };
         Returns: { answered_count: number; participant_count: number }[];
+      };
+      set_active_game: {
+        Args: { p_game_slug: string | null };
+        Returns: undefined;
       };
     };
   };

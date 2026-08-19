@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useParticipant } from "@/lib/participant/useParticipant";
 import { useRound, type RoundData } from "@/lib/realtime/useRound";
 import { useQuestionState } from "@/lib/realtime/useQuestionState";
+import { useGameLocks, isGameUnlocked } from "@/lib/realtime/useGameLocks";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browserClient";
 import { GENRE_CROWN_FICTION_QUESTIONS, GENRE_CROWN_NONFICTION_QUESTIONS } from "@/lib/data/genreCrown.questions";
 import { getGameMeta } from "@/lib/games";
 import JoinForm from "@/components/participant/JoinForm";
 import QuestionCard from "@/components/participant/QuestionCard";
+import GameLockedNotice from "@/components/participant/GameLockedNotice";
 import BrandMark from "@/components/shared/BrandMark";
 
 const GAME_SLUG = "genre-crown";
@@ -23,6 +25,7 @@ export default function GenreCrownPlayPage() {
     fictionRound?.status === "active" ? fictionRound : nonfictionRound?.status === "active" ? nonfictionRound : null;
 
   const { current } = useQuestionState(activeRound?.id);
+  const { locks, loaded: locksLoaded } = useGameLocks();
   const [scores, setScores] = useState<{ fiction: number | null; nonfiction: number | null }>({
     fiction: null,
     nonfiction: null,
@@ -52,6 +55,10 @@ export default function GenreCrownPlayPage() {
   if (!ready) return null;
 
   if (!participant) {
+    if (!locksLoaded) return null;
+    if (!isGameUnlocked(locks, GAME_SLUG)) {
+      return <GameLockedNotice gameName={meta.name} />;
+    }
     return <JoinForm gameName={meta.name} onJoin={join} />;
   }
 

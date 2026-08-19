@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useParticipant } from "@/lib/participant/useParticipant";
 import { useRound } from "@/lib/realtime/useRound";
 import { useQuestionState } from "@/lib/realtime/useQuestionState";
+import { useGameLocks, isGameUnlocked } from "@/lib/realtime/useGameLocks";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browserClient";
 import { FIRST_LINES_QUESTIONS } from "@/lib/data/firstLines.questions";
 import { getGameMeta } from "@/lib/games";
 import JoinForm from "@/components/participant/JoinForm";
 import QuestionCard from "@/components/participant/QuestionCard";
+import GameLockedNotice from "@/components/participant/GameLockedNotice";
 import BrandMark from "@/components/shared/BrandMark";
 
 const GAME_SLUG = "first-lines";
@@ -18,6 +20,7 @@ export default function FirstLinesPlayPage() {
   const { participant, ready, join } = useParticipant(GAME_SLUG);
   const { round } = useRound(GAME_SLUG, "main");
   const { current } = useQuestionState(round?.id);
+  const { locks, loaded: locksLoaded } = useGameLocks();
   const [finalPoints, setFinalPoints] = useState<number | null>(null);
 
   useEffect(() => {
@@ -35,6 +38,10 @@ export default function FirstLinesPlayPage() {
   if (!ready) return null;
 
   if (!participant) {
+    if (!locksLoaded) return null;
+    if (!isGameUnlocked(locks, GAME_SLUG)) {
+      return <GameLockedNotice gameName={meta.name} />;
+    }
     return <JoinForm gameName={meta.name} onJoin={join} />;
   }
 

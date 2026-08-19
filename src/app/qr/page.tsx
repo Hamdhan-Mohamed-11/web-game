@@ -1,47 +1,44 @@
 import QRCode from "qrcode";
 import Link from "next/link";
-import { GAMES, gamePlayUrl } from "@/lib/games";
 import BrandMark from "@/components/shared/BrandMark";
 
 async function generateQrDataUrl(url: string): Promise<string> {
-  return QRCode.toDataURL(url, { width: 320, margin: 1, color: { dark: "#072966", light: "#FFFFFF" } });
+  return QRCode.toDataURL(url, { width: 420, margin: 1, color: { dark: "#072966", light: "#FFFFFF" } });
 }
 
 export default async function QrPage() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
-  const cards = await Promise.all(
-    GAMES.map(async (game) => {
-      const url = new URL(gamePlayUrl(game.slug), siteUrl).toString();
-      const dataUrl = await generateQrDataUrl(url);
-      return { game, url, dataUrl };
-    })
-  );
+  const url = new URL("/", siteUrl).toString();
+  const dataUrl = await generateQrDataUrl(url);
 
   return (
     <main className="min-h-screen bg-cream-50 px-4 py-10 sm:px-6 print:bg-white">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-md">
         <div className="mb-8 flex items-center justify-between print:hidden">
-          <BrandMark tagline="QR Codes" />
+          <BrandMark tagline="QR Code" />
           <Link href="/admin" className="text-sm text-ink-600 hover:text-navy-900">
             ← Back to admin hub
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {cards.map(({ game, url, dataUrl }) => (
-            <section
-              key={game.slug}
-              className="break-inside-avoid rounded-2xl border border-navy-100 bg-white p-6 text-center shadow-card"
-            >
-              <h2 className="font-display text-lg font-semibold text-navy-900">{game.name}</h2>
-              <p className="mb-4 text-sm text-ink-600">{game.tagline}</p>
-              {/* eslint-disable-next-line @next/next/no-img-element -- data: URI, no next/image benefit */}
-              <img src={dataUrl} alt={`QR code for ${game.name}`} width={240} height={240} className="mx-auto" />
-              <p className="mt-3 break-all text-xs text-ink-600">{url}</p>
-            </section>
-          ))}
-        </div>
+        <section className="rounded-2xl border border-navy-100 bg-white p-8 text-center shadow-card">
+          <h2 className="font-display text-lg font-semibold text-navy-900">Scan to join</h2>
+          <p className="mb-6 text-sm text-ink-600">
+            One code for the whole night — players land on the games hub, where only the game you&apos;ve unlocked is
+            tappable.
+          </p>
+          {/* eslint-disable-next-line @next/next/no-img-element -- data: URI, no next/image benefit */}
+          <img src={dataUrl} alt="QR code to join Book Club Quiz Night" width={320} height={320} className="mx-auto" />
+          <p className="mt-4 break-all text-xs text-ink-600">{url}</p>
+        </section>
+
+        <p className="mt-6 text-center text-sm text-ink-600 print:hidden">
+          Unlock which game is open from the{" "}
+          <Link href="/admin" className="font-medium text-navy-900 underline decoration-gold-500 decoration-2 underline-offset-4">
+            admin hub
+          </Link>
+          .
+        </p>
       </div>
     </main>
   );

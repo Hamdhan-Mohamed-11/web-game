@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { useParticipant } from "@/lib/participant/useParticipant";
 import { useRound } from "@/lib/realtime/useRound";
 import { useBookMatchSession } from "@/lib/realtime/useBookMatchSession";
+import { useGameLocks, isGameUnlocked } from "@/lib/realtime/useGameLocks";
 import { getGameMeta } from "@/lib/games";
 import JoinForm from "@/components/participant/JoinForm";
 import MatchBoard from "@/components/participant/MatchBoard";
+import GameLockedNotice from "@/components/participant/GameLockedNotice";
 import BrandMark from "@/components/shared/BrandMark";
 import Button from "@/components/shared/Button";
 
@@ -39,6 +41,7 @@ export default function BookMatchPlayPage() {
   const { participant, ready, join } = useParticipant(GAME_SLUG);
   const { round } = useRound(GAME_SLUG, "match");
   const { session, matchedItemKeys, loaded, checkIn } = useBookMatchSession(round?.id, participant?.id);
+  const { locks, loaded: locksLoaded } = useGameLocks();
   const [ceremonyDone, setCeremonyDone] = useState(false);
   const [finalPoints, setFinalPoints] = useState<number | null>(null);
   const [checkInError, setCheckInError] = useState<string | null>(null);
@@ -76,6 +79,10 @@ export default function BookMatchPlayPage() {
   if (!ready) return null;
 
   if (!participant) {
+    if (!locksLoaded) return null;
+    if (!isGameUnlocked(locks, GAME_SLUG)) {
+      return <GameLockedNotice gameName={meta.name} />;
+    }
     return <JoinForm gameName={meta.name} onJoin={join} />;
   }
 

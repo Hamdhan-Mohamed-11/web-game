@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GAMES, gameAdminUrl, gameScreenUrl } from "@/lib/games";
 import LogoutButton from "./LogoutButton";
+import GameLockControls from "./GameLockControls";
 import BrandMark from "@/components/shared/BrandMark";
 
 export default function AdminHubPage() {
@@ -16,8 +17,10 @@ export default function AdminHubPage() {
           href="/qr"
           className="mb-6 block rounded-xl border border-navy-100 bg-white px-4 py-3 text-center font-medium text-navy-900 shadow-card transition-colors hover:bg-cream-100"
         >
-          View / print QR codes →
+          View / print the QR code →
         </Link>
+
+        <GameLockControls />
 
         <div className="flex flex-col gap-4">
           {GAMES.map((game) => (
