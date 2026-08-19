@@ -87,10 +87,16 @@ export default function Scoreboard({ rows, showProgress = false, progressTotal, 
     return <p className={theme === "dark" ? "text-white/50" : "text-ink-600"}>Waiting for scores…</p>;
   }
 
+  // The dark theme only ever renders on the LED screen, which is read from
+  // across a room — so it scales up at lg/2xl while the light (admin,
+  // laptop) theme stays at comfortable desk sizes.
+  const isScreen = theme === "dark";
+
   return (
-    <ol className="flex flex-col gap-2">
+    <ol className={`flex flex-col ${isScreen ? "gap-2 lg:gap-3" : "gap-2"}`}>
       {rows.map((row, i) => {
         const isLeader = i === 0;
+        const isPodium = i < 3;
         return (
           <li
             key={row.participantId}
@@ -98,45 +104,47 @@ export default function Scoreboard({ rows, showProgress = false, progressTotal, 
               if (el) rowRefs.current.set(row.participantId, el);
               else rowRefs.current.delete(row.participantId);
             }}
-            className={`flex items-center gap-3 rounded-xl px-4 ${i < 3 ? "py-4" : "py-3"} ${
-              theme === "dark" ? "bg-white/5 backdrop-blur-sm" : "border border-navy-100 bg-white shadow-card"
+            className={`flex items-center rounded-xl px-4 ${
+              isScreen ? "gap-4 lg:gap-5 lg:px-6" : "gap-3"
+            } ${isPodium ? "py-4" : "py-3"} ${isScreen && isPodium ? "lg:py-5" : ""} ${
+              isScreen ? "bg-white/[0.07] backdrop-blur-sm" : "border border-navy-100 bg-white shadow-card"
             } ${
-              isLeader && theme === "dark"
-                ? "border border-gold-500/50 shadow-[0_0_28px_-6px_rgba(224,152,44,0.5)]"
-                : ""
-            } ${isLeader && theme === "light" ? "border-2 border-gold-400" : ""}`}
+              isLeader && isScreen ? "border border-gold-500/50 shadow-[0_0_34px_-8px_rgba(224,152,44,0.6)]" : ""
+            } ${isLeader && !isScreen ? "border-2 border-gold-400" : ""}`}
           >
             {isMedalRank(i) ? (
-              <Medal rank={i} size={i === 0 ? 44 : 38} />
+              <Medal rank={i} size={i === 0 ? (isScreen ? 52 : 44) : isScreen ? 46 : 38} />
             ) : (
               <span
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold ${
-                  theme === "dark" ? "bg-white/10 text-white/70" : "bg-cream-200 text-ink-600"
-                }`}
+                className={`flex shrink-0 items-center justify-center rounded-full font-display font-bold ${
+                  isScreen ? "h-9 w-9 text-base lg:h-12 lg:w-12 lg:text-xl" : "h-8 w-8 text-sm"
+                } ${isScreen ? "bg-white/10 text-white/70" : "bg-cream-200 text-ink-600"}`}
               >
                 {i + 1}
               </span>
             )}
 
             <span
-              className={`flex-1 truncate font-medium ${i < 3 ? "text-lg" : "text-base"} ${
-                theme === "dark" ? "text-white" : "text-navy-900"
-              }`}
+              className={`flex-1 truncate font-medium ${isScreen ? "text-white" : "text-navy-900"} ${
+                isPodium ? "text-lg" : "text-base"
+              } ${isScreen ? (isPodium ? "lg:text-3xl" : "lg:text-2xl") : ""}`}
             >
               {row.displayName}
             </span>
 
             {showProgress && (
-              <span className={`text-sm tabular-nums ${theme === "dark" ? "text-white/60" : "text-ink-600"}`}>
+              <span
+                className={`tabular-nums ${isScreen ? "text-sm text-white/60 lg:text-xl" : "text-sm text-ink-600"}`}
+              >
                 {row.progress}/{progressTotal}
               </span>
             )}
 
             <AnimatedNumber
               value={row.totalPoints}
-              className={`font-display font-bold ${i < 3 ? "text-xl" : "text-base"} ${
-                theme === "dark" ? "text-gold-400" : "text-gold-700"
-              }`}
+              className={`font-display font-bold ${isScreen ? "text-gold-400" : "text-gold-700"} ${
+                isPodium ? "text-xl" : "text-base"
+              } ${isScreen ? (isPodium ? "lg:text-4xl" : "lg:text-2xl") : ""}`}
             />
           </li>
         );

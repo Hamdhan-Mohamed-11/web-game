@@ -47,7 +47,7 @@ export default function GameLockControls() {
 
       {error && <p className="mb-3 text-sm text-danger-600">{error}</p>}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col gap-3">
         {GAMES.map((game) => {
           const unlocked = loaded && isGameUnlocked(locks, game.slug);
           return (
@@ -56,12 +56,21 @@ export default function GameLockControls() {
               variant={unlocked ? "gold" : "outline"}
               onClick={() => handleSet(game.slug)}
               disabled={busy !== null || unlocked}
+              className="w-full justify-between"
             >
-              {unlocked ? `${game.name} — open` : `Unlock ${game.name}`}
+              <span>{game.name}</span>
+              <span className={unlocked ? "text-xs font-bold uppercase tracking-wider" : "text-xs text-ink-600"}>
+                {unlocked ? "Open" : "Locked — tap to open"}
+              </span>
             </Button>
           );
         })}
-        <Button variant="danger" onClick={() => handleSet(null)} disabled={busy !== null || !activeSlug}>
+        <Button
+          variant="danger"
+          onClick={() => handleSet(null)}
+          disabled={busy !== null || !activeSlug}
+          className="w-full"
+        >
           Lock all
         </Button>
       </div>

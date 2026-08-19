@@ -3,13 +3,19 @@
 import { useRound } from "@/lib/realtime/useRound";
 import { useLeaderboard } from "@/lib/realtime/useLeaderboard";
 import { TOTAL_PAIRS } from "@/lib/scoring/bookmatch";
-import { getGameMeta } from "@/lib/games";
 import Scoreboard from "@/components/shared/Scoreboard";
 import WinnerReveal from "@/components/screen/WinnerReveal";
-import { TrophyIcon } from "@/components/shared/icons";
+import ScreenShell from "@/components/screen/ScreenShell";
+import GlassPanel from "@/components/screen/GlassPanel";
+import ScreenFooter from "@/components/screen/ScreenFooter";
 
 const GAME_SLUG = "book-match";
-const meta = getGameMeta(GAME_SLUG)!;
+
+const TITLE = (
+  <>
+    The <span className="text-gold-400">Book Match</span> Challenge
+  </>
+);
 
 export default function BookMatchScreenPage() {
   const { round } = useRound(GAME_SLUG, "match");
@@ -17,36 +23,30 @@ export default function BookMatchScreenPage() {
 
   if (!round || round.status === "pending") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-navy-950 px-8 text-center">
-        <span className="text-lg font-semibold uppercase tracking-[0.3em] text-gold-400">Readers&rsquo; Summit 2026</span>
-        <h1 className="mt-4 font-display text-5xl font-bold text-white sm:text-6xl">{meta.name}</h1>
-        <p className="mt-4 text-2xl text-white/70">{meta.tagline}</p>
-        <p className="mt-16 text-3xl font-semibold uppercase tracking-[0.4em] text-gold-500">Get Ready</p>
-      </main>
+      <ScreenShell gameName={TITLE} center>
+        <p className="animate-rise-in font-display text-3xl font-semibold uppercase tracking-[0.4em] text-gold-500 lg:text-5xl">
+          Get Ready
+        </p>
+      </ScreenShell>
     );
   }
 
   if (round.status === "confirmed") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-navy-950 px-8 py-16">
-        <WinnerReveal roundId={round.id} title={meta.name} />
-      </main>
+      <ScreenShell center>
+        <WinnerReveal roundId={round.id} title="The Book Match Challenge" />
+      </ScreenShell>
     );
   }
 
   return (
-    <main className="min-h-screen bg-navy-950 px-10 py-10">
-      <h1 className="mb-10 font-display text-4xl font-bold text-white">
-        The <span className="text-gold-400">Book Match</span> Challenge
-      </h1>
-      <div className="mb-1 flex items-center gap-2">
-        <TrophyIcon className="h-6 w-6 text-gold-400" />
-        <h2 className="text-xl font-semibold uppercase tracking-widest text-gold-400">Live Top 10</h2>
-      </div>
-      <div className="mb-6 h-px w-40 bg-gradient-to-r from-gold-500 to-transparent" />
-      <div className="mx-auto max-w-2xl">
+    <ScreenShell
+      gameName={TITLE}
+      footer={<ScreenFooter label={`${TOTAL_PAIRS} pairs · 75 seconds`} />}
+    >
+      <GlassPanel title="Live Top 10">
         <Scoreboard rows={rows} showProgress progressTotal={TOTAL_PAIRS} theme="dark" />
-      </div>
-    </main>
+      </GlassPanel>
+    </ScreenShell>
   );
 }

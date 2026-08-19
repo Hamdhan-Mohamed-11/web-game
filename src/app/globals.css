@@ -91,6 +91,50 @@ a {
   animation: shake 0.4s ease-in-out;
 }
 
+/* ---------------------------------------------------------------------
+   LED screen ambience. These run for the whole event on a TV, so every
+   layer animates transform/opacity only (compositor-friendly) — never
+   background-position or filter, which would repaint continuously and
+   cook a low-power HDMI stick over a two-hour session.
+   --------------------------------------------------------------------- */
+.screen-bg {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 80% at 50% -10%, #12376f 0%, transparent 60%),
+    radial-gradient(90% 60% at 50% 110%, #0b2350 0%, transparent 55%),
+    var(--color-navy-950);
+}
+
+.screen-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+  will-change: transform;
+}
+
+@keyframes orb-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6%, 4%, 0) scale(1.12); }
+}
+@keyframes orb-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.08); }
+  50% { transform: translate3d(-5%, -6%, 0) scale(1); }
+}
+.animate-orb-a { animation: orb-drift-a 18s ease-in-out infinite; }
+.animate-orb-b { animation: orb-drift-b 24s ease-in-out infinite; }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translate3d(0, 18px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.animate-rise-in {
+  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @keyframes pop-in {
   0% { opacity: 0; transform: scale(0.5); }
   60% { opacity: 1; transform: scale(1.15); }

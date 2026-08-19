@@ -8,7 +8,9 @@ import { getGameMeta } from "@/lib/games";
 import CountdownTimer from "@/components/shared/CountdownTimer";
 import Scoreboard from "@/components/shared/Scoreboard";
 import WinnerReveal from "@/components/screen/WinnerReveal";
-import { TrophyIcon } from "@/components/shared/icons";
+import ScreenShell from "@/components/screen/ScreenShell";
+import GlassPanel from "@/components/screen/GlassPanel";
+import ScreenFooter from "@/components/screen/ScreenFooter";
 
 const GAME_SLUG = "genre-crown";
 const meta = getGameMeta(GAME_SLUG)!;
@@ -30,57 +32,53 @@ export default function GenreCrownScreenPage() {
 
   if (showReady) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-navy-950 px-8 text-center">
-        <span className="text-lg font-semibold uppercase tracking-[0.3em] text-gold-400">Readers&rsquo; Summit 2026</span>
-        <h1 className="mt-4 font-display text-5xl font-bold text-white sm:text-6xl">{meta.name}</h1>
-        <p className="mt-4 text-2xl text-white/70">{meta.tagline}</p>
-        <p className="mt-16 text-3xl font-semibold uppercase tracking-[0.4em] text-gold-500">Ready</p>
-      </main>
+      <ScreenShell gameName={meta.name} center>
+        <p className="animate-rise-in font-display text-3xl font-semibold uppercase tracking-[0.4em] text-gold-500 lg:text-5xl">
+          Ready
+        </p>
+      </ScreenShell>
     );
   }
 
   if (showNonfictionReveal && nonfictionRound) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-navy-950 px-8 py-16">
+      <ScreenShell center>
         <WinnerReveal roundId={nonfictionRound.id} title="Ruler of Non-Fiction" />
-      </main>
+      </ScreenShell>
     );
   }
 
   if (showFictionReveal && fictionRound) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-navy-950 px-8 py-16">
+      <ScreenShell center>
         <WinnerReveal roundId={fictionRound.id} title="Ruler of Fiction" />
-      </main>
+      </ScreenShell>
     );
   }
 
   const isFiction = activeRound?.roundKey === "fiction";
 
   return (
-    <main className="min-h-screen bg-navy-950 px-10 py-10">
-      <div className="mb-10 flex items-start justify-between">
-        <h1 className="font-display text-4xl font-bold text-white">
+    <ScreenShell
+      gameName={
+        <>
           <span className="text-gold-400">{isFiction ? "Fiction" : "Non-Fiction"}</span> Round
-        </h1>
-        {current && activeRound && (
-          <div className="flex items-center gap-6 text-right">
-            <div className="text-lg text-white/60">
-              Question {current.questionIndex + 1} / {activeRound.totalQuestions}
-            </div>
-            <CountdownTimer startedAt={current.startedAt} durationMs={QUESTION_DURATION_MS} size={96} theme="dark" />
-          </div>
-        )}
-      </div>
-
-      <div className="mb-1 flex items-center gap-2">
-        <TrophyIcon className="h-6 w-6 text-gold-400" />
-        <h2 className="text-xl font-semibold uppercase tracking-widest text-gold-400">Live Top 10</h2>
-      </div>
-      <div className="mb-6 h-px w-40 bg-gradient-to-r from-gold-500 to-transparent" />
-      <div className="mx-auto max-w-2xl">
+        </>
+      }
+      footer={
+        current && activeRound ? (
+          <ScreenFooter
+            label={`Question ${current.questionIndex + 1} / ${activeRound.totalQuestions}`}
+            timer={
+              <CountdownTimer startedAt={current.startedAt} durationMs={QUESTION_DURATION_MS} size={64} theme="dark" />
+            }
+          />
+        ) : undefined
+      }
+    >
+      <GlassPanel title="Live Top 10">
         <Scoreboard rows={rows} theme="dark" />
-      </div>
-    </main>
+      </GlassPanel>
+    </ScreenShell>
   );
 }
