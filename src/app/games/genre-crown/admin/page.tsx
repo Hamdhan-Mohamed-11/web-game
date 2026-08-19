@@ -44,7 +44,7 @@ export default function GenreCrownAdminPage() {
         <div className="mb-6 flex items-center justify-between">
           <h1 className="font-display text-2xl font-semibold text-navy-900">{meta.name}</h1>
           <div className="flex items-center gap-2">
-            <Link href="/admin" className={buttonClassName("outline", "px-3 py-2 text-xs")}>
+            <Link href="/admin" className={buttonClassName("outline", "px-3 py-2 text-xs whitespace-nowrap")}>
               ← Back to admin hub
             </Link>
             <Button variant="danger" onClick={handleReset} disabled={busy}>

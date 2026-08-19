@@ -17,7 +17,7 @@ export default async function QrPage() {
       <div className="mx-auto max-w-md">
         <div className="mb-8 flex items-center justify-between print:hidden">
           <BrandMark />
-          <Link href="/admin" className={buttonClassName("outline", "px-3 py-2 text-xs")}>
+          <Link href="/admin" className={buttonClassName("outline", "px-3 py-2 text-xs whitespace-nowrap")}>
             ← Back to admin hub
           </Link>
         </div>

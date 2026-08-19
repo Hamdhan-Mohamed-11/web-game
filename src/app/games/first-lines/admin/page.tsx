@@ -83,7 +83,7 @@ export default function FirstLinesAdminPage() {
             <p className="text-sm text-ink-600">Round status: {round?.status ?? "loading…"}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/admin" className={buttonClassName("outline", "px-3 py-2 text-xs")}>
+            <Link href="/admin" className={buttonClassName("outline", "px-3 py-2 text-xs whitespace-nowrap")}>
               ← Back to admin hub
             </Link>
             <Button variant="danger" onClick={handleReset} disabled={busy}>
