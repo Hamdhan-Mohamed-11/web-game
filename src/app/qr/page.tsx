@@ -1,6 +1,7 @@
 import QRCode from "qrcode";
 import Link from "next/link";
 import BrandMark from "@/components/shared/BrandMark";
+import { buttonClassName } from "@/components/shared/Button";
 
 async function generateQrDataUrl(url: string): Promise<string> {
   return QRCode.toDataURL(url, { width: 420, margin: 1, color: { dark: "#072966", light: "#FFFFFF" } });
@@ -15,8 +16,8 @@ export default async function QrPage() {
     <main className="min-h-screen bg-cream-50 px-4 py-10 sm:px-6 print:bg-white">
       <div className="mx-auto max-w-md">
         <div className="mb-8 flex items-center justify-between print:hidden">
-          <BrandMark tagline="QR Code" />
-          <Link href="/admin" className="text-sm text-ink-600 hover:text-navy-900">
+          <BrandMark />
+          <Link href="/admin" className={buttonClassName("outline", "px-3 py-2 text-xs")}>
             ← Back to admin hub
           </Link>
         </div>

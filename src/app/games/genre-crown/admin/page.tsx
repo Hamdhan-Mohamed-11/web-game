@@ -6,7 +6,7 @@ import { useRound } from "@/lib/realtime/useRound";
 import { GENRE_CROWN_FICTION_QUESTIONS, GENRE_CROWN_NONFICTION_QUESTIONS } from "@/lib/data/genreCrown.questions";
 import { getGameMeta } from "@/lib/games";
 import RoundAdminControls from "@/components/admin/RoundAdminControls";
-import Button from "@/components/shared/Button";
+import Button, { buttonClassName } from "@/components/shared/Button";
 import BrandMark from "@/components/shared/BrandMark";
 
 const GAME_SLUG = "genre-crown";
@@ -41,15 +41,16 @@ export default function GenreCrownAdminPage() {
         <div className="mb-6 flex justify-center">
           <BrandMark />
         </div>
-        <Link href="/admin" className="mb-4 inline-block text-sm text-ink-600 hover:text-navy-900">
-          ← Back to admin hub
-        </Link>
-
         <div className="mb-6 flex items-center justify-between">
           <h1 className="font-display text-2xl font-semibold text-navy-900">{meta.name}</h1>
-          <Button variant="danger" onClick={handleReset} disabled={busy}>
-            Reset
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/admin" className={buttonClassName("outline", "px-3 py-2 text-xs")}>
+              ← Back to admin hub
+            </Link>
+            <Button variant="danger" onClick={handleReset} disabled={busy}>
+              Reset
+            </Button>
+          </div>
         </div>
 
         {error && <p className="mb-4 text-sm text-danger-600">{error}</p>}

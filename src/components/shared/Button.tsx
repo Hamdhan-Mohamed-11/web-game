@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 
-type Variant = "gold" | "navy" | "outline" | "danger";
+type Variant = "gold" | "navy" | "outline" | "danger" | "success";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -14,8 +14,15 @@ const variants: Record<Variant, string> = {
   navy: "bg-navy-900 text-white hover:bg-navy-800 focus-visible:ring-navy-700",
   outline: "bg-white text-navy-900 border border-navy-100 hover:bg-navy-100/40 focus-visible:ring-navy-700",
   danger: "bg-white text-danger-600 border border-danger-600/40 hover:bg-danger-600/5 focus-visible:ring-danger-600",
+  success: "bg-success-600 text-white hover:bg-success-600/90 focus-visible:ring-success-600",
 };
 
 export default function Button({ variant = "navy", className = "", ...props }: ButtonProps) {
   return <button className={`${base} ${variants[variant]} ${className}`} {...props} />;
+}
+
+// For non-<button> elements (e.g. next/link's <a>) that need to look like a
+// Button — a real <button> can't nest inside an <a>, which is invalid HTML.
+export function buttonClassName(variant: Variant = "navy", className = ""): string {
+  return `${base} ${variants[variant]} ${className}`;
 }

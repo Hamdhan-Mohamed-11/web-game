@@ -44,7 +44,7 @@ export default function GameLockToggle({ slug }: { slug: GameSlug }) {
   return (
     <div className="flex flex-col items-end gap-1">
       <Button
-        variant={unlocked ? "gold" : "outline"}
+        variant={unlocked ? "success" : "outline"}
         onClick={handleToggle}
         disabled={busy || !loaded}
         className="min-w-[7.5rem]"

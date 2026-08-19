@@ -7,7 +7,7 @@ import { useLeaderboard } from "@/lib/realtime/useLeaderboard";
 import { TOTAL_PAIRS } from "@/lib/scoring/bookmatch";
 import { getGameMeta } from "@/lib/games";
 import Scoreboard from "@/components/shared/Scoreboard";
-import Button from "@/components/shared/Button";
+import Button, { buttonClassName } from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
 import BrandMark from "@/components/shared/BrandMark";
 
@@ -70,18 +70,19 @@ export default function BookMatchAdminPage() {
         <div className="mb-6 flex justify-center">
           <BrandMark />
         </div>
-        <Link href="/admin" className="mb-4 inline-block text-sm text-ink-600 hover:text-navy-900">
-          ← Back to admin hub
-        </Link>
-
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="font-display text-2xl font-semibold text-navy-900">{meta.name}</h1>
             <p className="text-sm text-ink-600">Round status: {round?.status ?? "loading…"}</p>
           </div>
-          <Button variant="danger" onClick={handleReset} disabled={busy}>
-            Reset
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/admin" className={buttonClassName("outline", "px-3 py-2 text-xs")}>
+              ← Back to admin hub
+            </Link>
+            <Button variant="danger" onClick={handleReset} disabled={busy}>
+              Reset
+            </Button>
+          </div>
         </div>
 
         {error && <p className="mb-4 text-sm text-danger-600">{error}</p>}
