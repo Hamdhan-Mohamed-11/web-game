@@ -77,8 +77,14 @@ body {
   box-sizing: border-box;
 }
 
-a {
-  color: inherit;
+/* Must live in @layer base. Tailwind v4 emits utilities inside a cascade
+   layer, and UNLAYERED rules beat layered ones regardless of specificity —
+   so an unlayered `a { color: inherit }` silently overrides `text-white`
+   on every link, which rendered dark-on-navy buttons unreadable. */
+@layer base {
+  a {
+    color: inherit;
+  }
 }
 
 @keyframes shake {
@@ -109,8 +115,10 @@ a {
 .screen-orb {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(90px);
-  opacity: 0.5;
+  filter: blur(110px);
+  /* Kept low deliberately: a warm orb over a navy field turns muddy brown
+     long before it looks bright, so these read as depth, not as colour. */
+  opacity: 0.3;
   pointer-events: none;
   z-index: -1;
   will-change: transform;

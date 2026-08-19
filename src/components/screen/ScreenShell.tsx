@@ -29,7 +29,7 @@ export default function ScreenShell({
       />
       <div
         className="screen-orb animate-orb-b"
-        style={{ width: "40vw", height: "40vw", bottom: "-16vw", right: "-8vw", background: "#8a5a16" }}
+        style={{ width: "38vw", height: "38vw", bottom: "-20vw", right: "-14vw", background: "#c8862a" }}
         aria-hidden="true"
       />
 
