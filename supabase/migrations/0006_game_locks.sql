@@ -30,7 +30,11 @@ begin
   -- when p_game_slug is null, due to SQL's three-valued logic — which
   -- would try to write NULL into a NOT NULL column and fail. The explicit
   -- `is not null` guard makes the "lock everything" case set false instead.
-  update games set is_unlocked = (p_game_slug is not null and slug = p_game_slug);
+  -- `where true` is required — this project rejects UPDATE with no WHERE
+  -- clause as a safety guard, and updating every row is intentional here.
+  update games
+  set is_unlocked = (p_game_slug is not null and slug = p_game_slug)
+  where true;
 end;
 $$;
 
