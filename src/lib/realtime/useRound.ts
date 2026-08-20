@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browserClient";
+import { ensureClockSynced } from "@/lib/realtime/serverClock";
 
 export interface RoundData {
   id: string;
@@ -28,6 +29,13 @@ export function useRound(gameSlug: string, roundKey: string) {
   useEffect(() => {
     let cancelled = false;
     const supabase = getBrowserSupabaseClient();
+
+    // Every view that shows a countdown mounts this hook, and it mounts well
+    // before any question arrives. Measuring the clock offset here means the
+    // 3-2-1 has a corrected clock the instant it needs one, instead of a
+    // freshly-loaded phone computing its first numeral against a skewed
+    // local clock and skipping the ceremony entirely.
+    ensureClockSynced();
 
     async function load() {
       const { data, error } = await supabase
