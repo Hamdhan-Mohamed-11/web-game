@@ -10,6 +10,12 @@ export interface RoundData {
   orderIndex: number;
   totalQuestions: number;
   status: "pending" | "active" | "closed" | "confirmed";
+  /**
+   * When this round's board actually opens — stamped 3s ahead of the admin's
+   * click so every view can run the same 3-2-1. Only Book Match uses it; the
+   * lockstep games hang their ceremony off question_state.started_at instead.
+   */
+  startedAt: string | null;
 }
 
 /** Safety-net poll interval — see useQuestionState for the full rationale. */
@@ -26,7 +32,7 @@ export function useRound(gameSlug: string, roundKey: string) {
     async function load() {
       const { data, error } = await supabase
         .from("rounds")
-        .select("id, game_slug, round_key, order_index, total_questions, status")
+        .select("id, game_slug, round_key, order_index, total_questions, status, started_at")
         .eq("game_slug", gameSlug)
         .eq("round_key", roundKey)
         .single();
@@ -45,6 +51,7 @@ export function useRound(gameSlug: string, roundKey: string) {
         orderIndex: data.order_index,
         totalQuestions: data.total_questions,
         status: data.status,
+        startedAt: data.started_at,
       });
       setLoading(false);
     }
@@ -70,6 +77,7 @@ export function useRound(gameSlug: string, roundKey: string) {
             order_index: number;
             total_questions: number;
             status: RoundData["status"];
+            started_at: string | null;
           };
           if (row.round_key === roundKey) {
             setRound({
@@ -79,6 +87,7 @@ export function useRound(gameSlug: string, roundKey: string) {
               orderIndex: row.order_index,
               totalQuestions: row.total_questions,
               status: row.status,
+              startedAt: row.started_at,
             });
           }
         }

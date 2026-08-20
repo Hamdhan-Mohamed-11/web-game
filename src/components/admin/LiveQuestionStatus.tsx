@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { QUESTION_DURATION_MS } from "@/lib/scoring/lockstep";
 import { useQuestionStats } from "@/lib/realtime/useQuestionStats";
+import { useLeadIn } from "@/lib/realtime/useLeadIn";
 import CountdownTimer from "@/components/shared/CountdownTimer";
+import LeadIn from "@/components/shared/LeadIn";
 
 interface LiveQuestionStatusProps {
   questionStateId: string | undefined;
@@ -31,11 +33,28 @@ export default function LiveQuestionStatus({
 }: LiveQuestionStatusProps) {
   const { answered, participants } = useQuestionStats(questionStateId);
   const [expired, setExpired] = useState(false);
+  const leadIn = useLeadIn(startedAt);
 
   if (!questionStateId || !startedAt) {
     return (
       <div className="rounded-xl border border-dashed border-navy-100 bg-cream-100/50 px-4 py-6 text-center text-sm text-ink-600">
         No question is live yet.
+      </div>
+    );
+  }
+
+  // The MC needs to see the same ceremony the room does, so they know the
+  // question is genuinely on its way and don't click again thinking it
+  // failed to land.
+  if (leadIn.pending) {
+    return (
+      <div className="rounded-xl border border-navy-100 bg-white px-4 py-6">
+        <LeadIn
+          count={leadIn.count}
+          size="inline"
+          tone="light"
+          label={`Question ${questionNumber} / ${totalQuestions}`}
+        />
       </div>
     );
   }

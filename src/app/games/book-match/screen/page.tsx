@@ -2,8 +2,10 @@
 
 import { useRound } from "@/lib/realtime/useRound";
 import { useLeaderboard } from "@/lib/realtime/useLeaderboard";
+import { useLeadIn } from "@/lib/realtime/useLeadIn";
 import { TOTAL_PAIRS } from "@/lib/scoring/bookmatch";
 import Scoreboard from "@/components/shared/Scoreboard";
+import LeadIn from "@/components/shared/LeadIn";
 import WinnerReveal from "@/components/screen/WinnerReveal";
 import ScreenShell from "@/components/screen/ScreenShell";
 import GlassPanel from "@/components/screen/GlassPanel";
@@ -20,11 +22,15 @@ const TITLE = (
 export default function BookMatchScreenPage() {
   const { round } = useRound(GAME_SLUG, "match");
   const { rows } = useLeaderboard(round?.id, 10, "reachedAt");
+  // Book Match has no per-question row, so its ceremony hangs off the round
+  // itself — which is also what keeps the boards on every phone from opening
+  // before the room has finished counting down together.
+  const leadIn = useLeadIn(round?.status === "active" ? round.startedAt : null);
 
   if (!round || round.status === "pending") {
     return (
       <ScreenShell gameName={TITLE} center>
-        <p className="animate-rise-in font-display text-3xl font-semibold uppercase tracking-[0.4em] text-gold-500 lg:text-5xl">
+        <p className="animate-rise-in font-display text-[4vh] font-semibold uppercase tracking-[0.4em] text-gold-500">
           Get Ready
         </p>
       </ScreenShell>
@@ -39,12 +45,17 @@ export default function BookMatchScreenPage() {
     );
   }
 
+  if (leadIn.pending) {
+    return (
+      <ScreenShell gameName={TITLE} center>
+        <LeadIn count={leadIn.count} label={`${TOTAL_PAIRS} pairs · 75 seconds`} />
+      </ScreenShell>
+    );
+  }
+
   return (
-    <ScreenShell
-      gameName={TITLE}
-      footer={<ScreenFooter label={`${TOTAL_PAIRS} pairs · 75 seconds`} />}
-    >
-      <GlassPanel title="Live Top 10">
+    <ScreenShell gameName={TITLE}>
+      <GlassPanel title="Live Top 10" aside={<ScreenFooter label={`${TOTAL_PAIRS} pairs · 75 seconds`} />}>
         <Scoreboard rows={rows} showProgress progressTotal={TOTAL_PAIRS} theme="dark" />
       </GlassPanel>
     </ScreenShell>

@@ -24,6 +24,7 @@ export interface Database {
           order_index: number;
           total_questions: number;
           status: "pending" | "active" | "closed" | "confirmed";
+          started_at: string | null;
         };
         Insert: Partial<RoundsRow> & Pick<RoundsRow, "game_slug" | "round_key" | "order_index" | "total_questions">;
         Update: Partial<RoundsRow>;

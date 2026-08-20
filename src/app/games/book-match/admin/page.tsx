@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRound } from "@/lib/realtime/useRound";
 import { useLeaderboard } from "@/lib/realtime/useLeaderboard";
+import { useLeadIn } from "@/lib/realtime/useLeadIn";
 import { TOTAL_PAIRS } from "@/lib/scoring/bookmatch";
 import { getGameMeta } from "@/lib/games";
 import Scoreboard from "@/components/shared/Scoreboard";
+import LeadIn from "@/components/shared/LeadIn";
 import Button, { buttonClassName } from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
 import BrandMark from "@/components/shared/BrandMark";
@@ -29,6 +31,7 @@ async function postAdmin(path: string, body: unknown) {
 export default function BookMatchAdminPage() {
   const { round } = useRound(GAME_SLUG, "match");
   const { rows: leaderboard } = useLeaderboard(round?.id, 10, "reachedAt");
+  const leadIn = useLeadIn(round?.status === "active" ? round.startedAt : null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,6 +99,14 @@ export default function BookMatchAdminPage() {
               Confirm Top 2 &amp; Reveal
             </Button>
           </div>
+
+          {/* The MC sees the same 3-2-1 the room does, so they know the start
+              actually landed rather than wondering whether to click again. */}
+          {leadIn.pending && (
+            <div className="mt-4 rounded-xl border border-navy-100 bg-white px-4 py-6">
+              <LeadIn count={leadIn.count} size="inline" tone="light" label="Boards open in" />
+            </div>
+          )}
         </Card>
 
         <h2 className="mb-3 font-display text-lg font-semibold text-navy-900">Live Top 10</h2>

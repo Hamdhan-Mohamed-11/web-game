@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browserClient";
 import { QUESTION_DURATION_MS } from "@/lib/scoring/lockstep";
+import { useLeadIn } from "@/lib/realtime/useLeadIn";
 import CountdownTimer from "@/components/shared/CountdownTimer";
+import LeadIn from "@/components/shared/LeadIn";
 import BrandMark from "@/components/shared/BrandMark";
 
 interface QuestionCardProps {
@@ -33,6 +35,7 @@ export default function QuestionCard({
   const [expired, setExpired] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const leadIn = useLeadIn(startedAt);
 
   async function handleAnswer(choiceIndex: number) {
     if (confirmed || submitting || expired) return;
@@ -74,6 +77,20 @@ export default function QuestionCard({
   }
 
   const isLocked = confirmed || expired;
+
+  // The prompt stays hidden for the whole ceremony. Revealing it early would
+  // hand a head start to whoever's phone happened to render first, which is
+  // precisely what the synchronised 3-2-1 exists to prevent.
+  if (leadIn.pending) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-navy-950 px-6">
+        <span className="mb-10 rounded-full border border-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-white/60">
+          Question {questionNumber} / {totalQuestions}
+        </span>
+        <LeadIn count={leadIn.count} size="phone" />
+      </main>
+    );
+  }
 
   return (
     <main

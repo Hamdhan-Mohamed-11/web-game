@@ -5,44 +5,29 @@ import { useParticipant } from "@/lib/participant/useParticipant";
 import { useRound } from "@/lib/realtime/useRound";
 import { useBookMatchSession } from "@/lib/realtime/useBookMatchSession";
 import { useGameLocks, isGameUnlocked } from "@/lib/realtime/useGameLocks";
+import { useLeadIn } from "@/lib/realtime/useLeadIn";
 import { getGameMeta } from "@/lib/games";
 import JoinForm from "@/components/participant/JoinForm";
 import MatchBoard from "@/components/participant/MatchBoard";
 import GameLockedNotice from "@/components/participant/GameLockedNotice";
 import BrandMark from "@/components/shared/BrandMark";
+import LeadIn from "@/components/shared/LeadIn";
 import Button from "@/components/shared/Button";
 
 const GAME_SLUG = "book-match";
 const meta = getGameMeta(GAME_SLUG)!;
-const CEREMONY_SECONDS = 3;
-
-function Ceremony({ onDone }: { onDone: () => void }) {
-  const [count, setCount] = useState(CEREMONY_SECONDS);
-
-  useEffect(() => {
-    if (count <= 0) {
-      onDone();
-      return;
-    }
-    const t = setTimeout(() => setCount((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [count, onDone]);
-
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-navy-950">
-      <span key={count} className="animate-pop-in font-display text-8xl font-bold text-gold-500">
-        {count > 0 ? count : "Go!"}
-      </span>
-    </main>
-  );
-}
 
 export default function BookMatchPlayPage() {
   const { participant, ready, join } = useParticipant(GAME_SLUG);
   const { round } = useRound(GAME_SLUG, "match");
   const { session, matchedItemKeys, loaded, checkIn } = useBookMatchSession(round?.id, participant?.id);
   const { locks, loaded: locksLoaded } = useGameLocks();
-  const [ceremonyDone, setCeremonyDone] = useState(false);
+  // The ceremony is server-timed now (rounds.started_at is stamped 3s ahead
+  // of the admin's click) rather than a local setTimeout started whenever
+  // this phone happened to notice the round go active — otherwise two phones
+  // a second apart counted down a second apart and got different boards.
+  const leadIn = useLeadIn(round?.status === "active" ? round.startedAt : null);
+  const ceremonyDone = round?.status === "active" && !leadIn.pending;
   const [finalPoints, setFinalPoints] = useState<number | null>(null);
   const [checkInError, setCheckInError] = useState<string | null>(null);
   const [checkInAttempt, setCheckInAttempt] = useState(0);
@@ -127,7 +112,11 @@ export default function BookMatchPlayPage() {
   if (!loaded) return null;
 
   if (!session && !ceremonyDone) {
-    return <Ceremony onDone={() => setCeremonyDone(true)} />;
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-navy-950 px-6">
+        <LeadIn count={leadIn.count} size="phone" />
+      </main>
+    );
   }
 
   if (!session) {

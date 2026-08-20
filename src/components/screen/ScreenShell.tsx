@@ -5,22 +5,25 @@ import type { ReactNode } from "react";
  * Shared chrome for the three LED screen views.
  *
  * Sized for the room, not a laptop: this is projected on a TV people read
- * from across a hall, so type scales up hard at the `xl`/`2xl` breakpoints
- * rather than staying at comfortable desk sizes.
+ * from across a hall. Everything here is measured in vh rather than on a
+ * breakpoint ladder, because the hard constraint is vertical — a full Top 10
+ * has to fit whatever the projector's height is, with nothing scrolled out
+ * of sight on a screen nobody can touch.
  */
 export default function ScreenShell({
   gameName,
   children,
-  footer,
+  decor,
   center = false,
 }: {
   gameName?: ReactNode;
   children: ReactNode;
-  footer?: ReactNode;
+  /** Game-specific background artwork, rendered behind the content. */
+  decor?: ReactNode;
   center?: boolean;
 }) {
   return (
-    <main className="screen-bg flex min-h-screen flex-col overflow-hidden px-6 py-8 lg:px-12 lg:py-10">
+    <main className="screen-bg flex h-screen flex-col overflow-hidden px-6 py-[2vh] lg:px-12">
       {/* Ambient depth. Sits behind everything via z-index on .screen-orb. */}
       <div
         className="screen-orb animate-orb-a"
@@ -33,37 +36,40 @@ export default function ScreenShell({
         aria-hidden="true"
       />
 
-      <header className="animate-rise-in flex shrink-0 flex-col items-center text-center">
+      {decor}
+
+      {/* z-10 on both content blocks, not just a z-0 on `decor`: an absolutely
+          positioned child paints above static siblings regardless of DOM
+          order, so without this the artwork would cover the standings. */}
+      <header className="animate-rise-in relative z-10 flex shrink-0 flex-col items-center text-center">
         {/* The brand asset has a cream background baked into the file, so on
             a dark screen it's presented as a deliberate printed plaque
             rather than pretending it has transparency. */}
-        <div className="rounded-xl bg-cream-50 px-4 py-2 shadow-[0_8px_30px_-8px_rgba(0,0,0,0.6)] lg:px-5 lg:py-2.5">
+        <div className="rounded-xl bg-cream-50 px-[1.4vh] py-[0.8vh] shadow-[0_8px_30px_-8px_rgba(0,0,0,0.6)]">
           <Image
             src="/pick-a-book-logo.png"
             alt="Pick a Book — Readers' Summit 2026"
             width={826}
             height={349}
             priority
-            className="h-auto w-44 lg:w-64 2xl:w-80"
+            className="h-[9vh] w-auto"
           />
         </div>
 
         {gameName && (
-          <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-white lg:mt-5 lg:text-5xl 2xl:text-6xl">
+          <h1 className="mt-[1.4vh] font-display text-[4.6vh] font-bold leading-tight tracking-tight text-white">
             {gameName}
           </h1>
         )}
       </header>
 
       <div
-        className={`flex min-h-0 flex-1 flex-col ${
-          center ? "items-center justify-center" : "items-center justify-center py-6 lg:py-8"
+        className={`relative z-10 flex min-h-0 flex-1 flex-col items-center ${
+          center ? "justify-center" : "justify-center py-[1.5vh]"
         }`}
       >
         {children}
       </div>
-
-      {footer && <footer className="animate-rise-in flex shrink-0 justify-center">{footer}</footer>}
     </main>
   );
 }

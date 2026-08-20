@@ -3,14 +3,17 @@
 import { useRound } from "@/lib/realtime/useRound";
 import { useQuestionState } from "@/lib/realtime/useQuestionState";
 import { useLeaderboard } from "@/lib/realtime/useLeaderboard";
+import { useLeadIn } from "@/lib/realtime/useLeadIn";
 import { QUESTION_DURATION_MS } from "@/lib/scoring/lockstep";
 import { getGameMeta } from "@/lib/games";
 import CountdownTimer from "@/components/shared/CountdownTimer";
 import Scoreboard from "@/components/shared/Scoreboard";
+import LeadIn from "@/components/shared/LeadIn";
 import WinnerReveal from "@/components/screen/WinnerReveal";
 import ScreenShell from "@/components/screen/ScreenShell";
 import GlassPanel from "@/components/screen/GlassPanel";
 import ScreenFooter from "@/components/screen/ScreenFooter";
+import CrownRegalia from "@/components/screen/CrownRegalia";
 
 const GAME_SLUG = "genre-crown";
 const meta = getGameMeta(GAME_SLUG)!;
@@ -24,6 +27,7 @@ export default function GenreCrownScreenPage() {
 
   const { current } = useQuestionState(activeRound?.id);
   const { rows } = useLeaderboard(activeRound?.id);
+  const leadIn = useLeadIn(current?.startedAt);
 
   const showReady = fictionRound?.status === "pending" && nonfictionRound?.status === "pending";
   const showFictionReveal =
@@ -32,8 +36,8 @@ export default function GenreCrownScreenPage() {
 
   if (showReady) {
     return (
-      <ScreenShell gameName={meta.name} center>
-        <p className="animate-rise-in font-display text-3xl font-semibold uppercase tracking-[0.4em] text-gold-500 lg:text-5xl">
+      <ScreenShell gameName={meta.name} decor={<CrownRegalia />} center>
+        <p className="animate-rise-in font-display text-[4vh] font-semibold uppercase tracking-[0.4em] text-gold-500">
           Ready
         </p>
       </ScreenShell>
@@ -42,7 +46,7 @@ export default function GenreCrownScreenPage() {
 
   if (showNonfictionReveal && nonfictionRound) {
     return (
-      <ScreenShell center>
+      <ScreenShell decor={<CrownRegalia />} center>
         <WinnerReveal roundId={nonfictionRound.id} title="Ruler of Non-Fiction" />
       </ScreenShell>
     );
@@ -50,33 +54,45 @@ export default function GenreCrownScreenPage() {
 
   if (showFictionReveal && fictionRound) {
     return (
-      <ScreenShell center>
+      <ScreenShell decor={<CrownRegalia />} center>
         <WinnerReveal roundId={fictionRound.id} title="Ruler of Fiction" />
       </ScreenShell>
     );
   }
 
   const isFiction = activeRound?.roundKey === "fiction";
+  const title = (
+    <>
+      <span className="text-gold-400">{isFiction ? "Fiction" : "Non-Fiction"}</span> Round
+    </>
+  );
+
+  if (leadIn.pending && current && activeRound) {
+    return (
+      <ScreenShell gameName={title} decor={<CrownRegalia />} center>
+        <LeadIn
+          count={leadIn.count}
+          label={`Question ${current.questionIndex + 1} / ${activeRound.totalQuestions}`}
+        />
+      </ScreenShell>
+    );
+  }
 
   return (
-    <ScreenShell
-      gameName={
-        <>
-          <span className="text-gold-400">{isFiction ? "Fiction" : "Non-Fiction"}</span> Round
-        </>
-      }
-      footer={
-        current && activeRound ? (
-          <ScreenFooter
-            label={`Question ${current.questionIndex + 1} / ${activeRound.totalQuestions}`}
-            timer={
-              <CountdownTimer startedAt={current.startedAt} durationMs={QUESTION_DURATION_MS} size={64} theme="dark" />
-            }
-          />
-        ) : undefined
-      }
-    >
-      <GlassPanel title="Live Top 10">
+    <ScreenShell gameName={title} decor={<CrownRegalia />}>
+      <GlassPanel
+        title="Live Top 10"
+        aside={
+          current && activeRound ? (
+            <ScreenFooter
+              label={`Question ${current.questionIndex + 1} / ${activeRound.totalQuestions}`}
+              timer={
+                <CountdownTimer startedAt={current.startedAt} durationMs={QUESTION_DURATION_MS} size="5vh" theme="dark" />
+              }
+            />
+          ) : undefined
+        }
+      >
         <Scoreboard rows={rows} theme="dark" />
       </GlassPanel>
     </ScreenShell>

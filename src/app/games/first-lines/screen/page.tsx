@@ -3,9 +3,11 @@
 import { useRound } from "@/lib/realtime/useRound";
 import { useQuestionState } from "@/lib/realtime/useQuestionState";
 import { useLeaderboard } from "@/lib/realtime/useLeaderboard";
+import { useLeadIn } from "@/lib/realtime/useLeadIn";
 import { QUESTION_DURATION_MS } from "@/lib/scoring/lockstep";
 import CountdownTimer from "@/components/shared/CountdownTimer";
 import Scoreboard from "@/components/shared/Scoreboard";
+import LeadIn from "@/components/shared/LeadIn";
 import WinnerReveal from "@/components/screen/WinnerReveal";
 import ScreenShell from "@/components/screen/ScreenShell";
 import GlassPanel from "@/components/screen/GlassPanel";
@@ -23,11 +25,12 @@ export default function FirstLinesScreenPage() {
   const { round } = useRound(GAME_SLUG, "main");
   const { current } = useQuestionState(round?.id);
   const { rows } = useLeaderboard(round?.id);
+  const leadIn = useLeadIn(current?.startedAt);
 
   if (!round || round.status === "pending") {
     return (
       <ScreenShell gameName={TITLE} center>
-        <p className="animate-rise-in font-display text-3xl font-semibold uppercase tracking-[0.4em] text-gold-500 lg:text-5xl">
+        <p className="animate-rise-in font-display text-[4vh] font-semibold uppercase tracking-[0.4em] text-gold-500">
           Ready
         </p>
       </ScreenShell>
@@ -42,21 +45,29 @@ export default function FirstLinesScreenPage() {
     );
   }
 
+  if (leadIn.pending && current) {
+    return (
+      <ScreenShell gameName={TITLE} center>
+        <LeadIn count={leadIn.count} label={`Question ${current.questionIndex + 1} / ${round.totalQuestions}`} />
+      </ScreenShell>
+    );
+  }
+
   return (
-    <ScreenShell
-      gameName={TITLE}
-      footer={
-        current ? (
-          <ScreenFooter
-            label={`Question ${current.questionIndex + 1} / ${round.totalQuestions}`}
-            timer={
-              <CountdownTimer startedAt={current.startedAt} durationMs={QUESTION_DURATION_MS} size={64} theme="dark" />
-            }
-          />
-        ) : undefined
-      }
-    >
-      <GlassPanel title="Live Top 10">
+    <ScreenShell gameName={TITLE}>
+      <GlassPanel
+        title="Live Top 10"
+        aside={
+          current ? (
+            <ScreenFooter
+              label={`Question ${current.questionIndex + 1} / ${round.totalQuestions}`}
+              timer={
+                <CountdownTimer startedAt={current.startedAt} durationMs={QUESTION_DURATION_MS} size="5vh" theme="dark" />
+              }
+            />
+          ) : undefined
+        }
+      >
         <Scoreboard rows={rows} theme="dark" />
       </GlassPanel>
     </ScreenShell>
