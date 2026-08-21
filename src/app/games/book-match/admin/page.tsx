@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRound } from "@/lib/realtime/useRound";
 import { useLeaderboard } from "@/lib/realtime/useLeaderboard";
 import { useLeadIn } from "@/lib/realtime/useLeadIn";
-import { TOTAL_PAIRS } from "@/lib/scoring/bookmatch";
+import { serverNow } from "@/lib/realtime/serverClock";
+import { MATCH_ROUND_DURATION_MS, TOTAL_PAIRS } from "@/lib/scoring/bookmatch";
 import { getGameMeta } from "@/lib/games";
 import Scoreboard from "@/components/shared/Scoreboard";
 import LeadIn from "@/components/shared/LeadIn";
@@ -54,13 +55,42 @@ export default function BookMatchAdminPage() {
 
   function handleConfirmWinners() {
     if (!round) return;
-    const winners = leaderboard.slice(0, 2).map((r, i) => ({
+    const winners = leaderboard.slice(0, 3).map((r, i) => ({
       place: i + 1,
       displayName: r.displayName,
       points: r.totalPoints,
     }));
     run(() => postAdmin(`/api/games/${GAME_SLUG}/confirm-round`, { roundId: round.id, winners }));
   }
+
+  // Book Match ends on a clock, not on an operator's cue: once the 75s is up
+  // no further points can be scored, so the round reveals its winners on its
+  // own. The button stays live in case this tab was closed at the buzzer.
+  //
+  // Deliberately reads the freshest leaderboard at fire time (via a ref)
+  // rather than closing over the rows this render happened to see — the last
+  // matches land in the final second, and confirming a stale top three would
+  // crown the wrong people.
+  const confirmRef = useRef(handleConfirmWinners);
+  useEffect(() => {
+    confirmRef.current = handleConfirmWinners;
+  });
+  const autoConfirmed = useRef(false);
+
+  useEffect(() => {
+    if (round?.status !== "active" || !round.startedAt) return;
+    if (autoConfirmed.current) return;
+
+    // A short grace window after the buzzer so in-flight submissions from
+    // phones on hall wifi are counted before the standings are frozen.
+    const endsAt = new Date(round.startedAt).getTime() + MATCH_ROUND_DURATION_MS + 2500;
+    const timer = setTimeout(() => {
+      autoConfirmed.current = true;
+      confirmRef.current();
+    }, Math.max(0, endsAt - serverNow()));
+
+    return () => clearTimeout(timer);
+  }, [round?.status, round?.startedAt]);
 
   function handleReset() {
     if (!confirm("Reset all Book Match data? This clears participants and scores.")) return;

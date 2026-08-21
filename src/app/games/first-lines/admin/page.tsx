@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
+import { useAutoAdvance } from "@/lib/admin/useAutoAdvance";
 import { useRound } from "@/lib/realtime/useRound";
 import { useQuestionState } from "@/lib/realtime/useQuestionState";
 import { useLeaderboard } from "@/lib/realtime/useLeaderboard";
@@ -51,14 +52,35 @@ export default function FirstLinesAdminPage() {
     }
   }
 
+  // Keyed on the id so auto-advance isn't handed a new callback (and its
+  // timeout rescheduled) on every realtime tick.
+  const startQuestion = useCallback(
+    (index: number) => {
+      if (!round) return;
+      run(() => postAdmin(`/api/games/${GAME_SLUG}/start-question`, { roundId: round.id, questionIndex: index }));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [round?.id]
+  );
+
   function handleStartNext() {
-    if (!round) return;
-    run(() => postAdmin(`/api/games/${GAME_SLUG}/start-question`, { roundId: round.id, questionIndex: nextIndex }));
+    startQuestion(nextIndex);
   }
+
+  // Rolls the round forward on its own once a question's clock runs out;
+  // the button above still works if the operator wants to hold or skip.
+  useAutoAdvance({
+    enabled: round?.status === "active",
+    questionStateId: current?.id,
+    questionIndex: current?.questionIndex,
+    startedAt: current?.startedAt,
+    totalQuestions: round?.totalQuestions ?? 0,
+    onAdvance: startQuestion,
+  });
 
   function handleConfirmWinners() {
     if (!round) return;
-    const winners = leaderboard.slice(0, 2).map((r, i) => ({
+    const winners = leaderboard.slice(0, 3).map((r, i) => ({
       place: i + 1,
       displayName: r.displayName,
       points: r.totalPoints,

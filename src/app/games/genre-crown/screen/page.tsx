@@ -47,7 +47,7 @@ export default function GenreCrownScreenPage() {
   if (showNonfictionReveal && nonfictionRound) {
     return (
       <ScreenShell decor={<CrownRegalia />} center>
-        <WinnerReveal roundId={nonfictionRound.id} title="Ruler of Non-Fiction" />
+        <WinnerReveal roundId={nonfictionRound.id} title="Ruler of Non-Fiction" variant="single" />
       </ScreenShell>
     );
   }
@@ -55,7 +55,7 @@ export default function GenreCrownScreenPage() {
   if (showFictionReveal && fictionRound) {
     return (
       <ScreenShell decor={<CrownRegalia />} center>
-        <WinnerReveal roundId={fictionRound.id} title="Ruler of Fiction" />
+        <WinnerReveal roundId={fictionRound.id} title="Ruler of Fiction" variant="single" />
       </ScreenShell>
     );
   }
@@ -67,12 +67,13 @@ export default function GenreCrownScreenPage() {
     </>
   );
 
-  if (leadIn.pending && current && activeRound) {
+  if (current?.questionIndex === 0 && leadIn.pending && activeRound) {
     return (
       <ScreenShell gameName={title} decor={<CrownRegalia />} center>
         <LeadIn
           count={leadIn.count}
           label={`Question ${current.questionIndex + 1} / ${activeRound.totalQuestions}`}
+          alert
         />
       </ScreenShell>
     );

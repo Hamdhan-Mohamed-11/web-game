@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParticipant } from "@/lib/participant/useParticipant";
 import { useRound, type RoundData } from "@/lib/realtime/useRound";
 import { useQuestionState } from "@/lib/realtime/useQuestionState";
@@ -13,6 +13,7 @@ import { GENRE_CROWN_FICTION_QUESTIONS, GENRE_CROWN_NONFICTION_QUESTIONS } from 
 import { getGameMeta } from "@/lib/games";
 import JoinForm from "@/components/participant/JoinForm";
 import QuestionCard from "@/components/participant/QuestionCard";
+import FinalResult from "@/components/participant/FinalResult";
 import GameLockedNotice from "@/components/participant/GameLockedNotice";
 import BrandMark from "@/components/shared/BrandMark";
 
@@ -32,10 +33,8 @@ export default function GenreCrownPlayPage() {
 
   const { current } = useQuestionState(activeRound?.id);
   const { locks, loaded: locksLoaded } = useGameLocks();
-  const [scores, setScores] = useState<{ fiction: number | null; nonfiction: number | null }>({
-    fiction: null,
-    nonfiction: null,
-  });
+  const [fictionScore, setFictionScore] = useState<number | null>(null);
+  const [myScore, setMyScore] = useState<number | null>(null);
 
   const gameOver = nonfictionRound?.status === "confirmed";
 
@@ -58,28 +57,54 @@ export default function GenreCrownPlayPage() {
 
   const showFictionIntermission = fictionFinished && nonfictionRound?.status !== "active" && !gameOver;
 
+  // Fiction's total, for the intermission card between the two rounds.
+  // 'closed' as well as 'confirmed': a round is closed the moment the next
+  // one starts, and the intermission wants the score right then — waiting
+  // for the admin to confirm winners would leave it blank.
   useEffect(() => {
-    if (!participant) return;
+    if (!participant || !fictionRound) return;
+    if (fictionRound.status !== "closed" && fictionRound.status !== "confirmed") return;
+
     const supabase = getBrowserSupabaseClient();
+    supabase
+      .from("leaderboard_entries")
+      .select("total_points")
+      .eq("round_id", fictionRound.id)
+      .eq("participant_id", participant.id)
+      .maybeSingle()
+      .then(({ data }) => setFictionScore(data?.total_points ?? 0));
+  }, [participant, fictionRound]);
 
-    async function fetchScore(round: RoundData | null, key: "fiction" | "nonfiction") {
-      if (!round || !participant) return;
-      const { data } = await supabase
-        .from("leaderboard_entries")
-        .select("total_points")
-        .eq("round_id", round.id)
-        .eq("participant_id", participant.id)
-        .maybeSingle();
-      setScores((prev) => ({ ...prev, [key]: data?.total_points ?? 0 }));
-    }
+  // Running score for the round currently being played. Reset on every
+  // round switch (fiction -> nonfiction) so a leftover fiction total can't
+  // flash before the real nonfiction total loads; each new answer then
+  // updates it locally via QuestionCard's onScoreUpdate.
+  useEffect(() => {
+    if (!activeRound?.id || !participant) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMyScore(null);
+    const supabase = getBrowserSupabaseClient();
+    supabase
+      .from("leaderboard_entries")
+      .select("total_points")
+      .eq("round_id", activeRound.id)
+      .eq("participant_id", participant.id)
+      .maybeSingle()
+      .then(({ data }) => setMyScore(data?.total_points ?? 0));
+  }, [activeRound?.id, participant]);
 
-    // 'closed' as well as 'confirmed': a round is closed the moment the
-    // next one starts, and the intermission wants to show the score right
-    // then — waiting for the admin to confirm winners would leave it blank.
-    const isDone = (s?: string) => s === "closed" || s === "confirmed";
-    if (isDone(fictionRound?.status)) fetchScore(fictionRound, "fiction");
-    if (isDone(nonfictionRound?.status)) fetchScore(nonfictionRound, "nonfiction");
-  }, [participant, fictionRound, nonfictionRound]);
+  // Both rounds are ranked separately on the results screen — they crown two
+  // separate rulers, so one combined placing would be meaningless. Keyed on
+  // the ids because useRound rebuilds the round objects on every tick.
+  const resultRounds = useMemo(
+    () =>
+      [
+        fictionRound ? { label: "Fiction", roundId: fictionRound.id } : null,
+        nonfictionRound ? { label: "Non-Fiction", roundId: nonfictionRound.id } : null,
+      ].filter((r): r is { label: string; roundId: string } => r !== null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fictionRound?.id, nonfictionRound?.id]
+  );
 
   if (!ready) return null;
 
@@ -93,17 +118,11 @@ export default function GenreCrownPlayPage() {
 
   if (gameOver) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-cream-50 px-6 text-center">
-        <BrandMark />
-        <h1 className="mt-6 font-display text-3xl font-bold text-navy-900">Game over!</h1>
-        <p className="mt-3 text-lg text-navy-900">
-          Fiction: <span className="font-display font-bold text-gold-700">{scores.fiction ?? "…"}</span> pts
-        </p>
-        <p className="text-lg text-navy-900">
-          Non-Fiction: <span className="font-display font-bold text-gold-700">{scores.nonfiction ?? "…"}</span> pts
-        </p>
-        <p className="mt-4 text-sm text-ink-600">Look at the LED screen for the winners.</p>
-      </main>
+      <FinalResult
+        displayName={participant.displayName}
+        participantId={participant.id}
+        rounds={resultRounds}
+      />
     );
   }
 
@@ -117,9 +136,9 @@ export default function GenreCrownPlayPage() {
         <h1 className="mt-5 font-display text-3xl font-bold text-navy-900">
           Next up: <span className="text-gold-700">Non-Fiction</span>
         </h1>
-        {scores.fiction !== null && (
+        {fictionScore !== null && (
           <p className="mt-3 text-lg text-navy-900">
-            Your Fiction score: <span className="font-display font-bold text-gold-700">{scores.fiction}</span> pts
+            Your Fiction score: <span className="font-display font-bold text-gold-700">{fictionScore}</span> pts
           </p>
         )}
         <p className="mt-4 text-sm text-ink-600">Hang tight — the next round starts shortly.</p>
@@ -155,6 +174,8 @@ export default function GenreCrownPlayPage() {
         prompt={question.question}
         choices={question.choices}
         startedAt={current.startedAt}
+        myScore={myScore}
+        onScoreUpdate={setMyScore}
       />
     </div>
   );

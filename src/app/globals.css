@@ -163,6 +163,59 @@ body {
   animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* ---------------------------------------------------------------------
+   Lead-in ceremony. The ring expands outward from the numeral on every
+   tick, which is what makes the countdown readable as "something is about
+   to happen" from the corner of the eye — a numeral alone changing silently
+   is easy to miss on a phone lying on a table.
+   --------------------------------------------------------------------- */
+@keyframes countdown-ring {
+  0% { opacity: 0.55; transform: scale(0.55); }
+  100% { opacity: 0; transform: scale(2.1); }
+}
+.animate-countdown-ring {
+  animation: countdown-ring 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* The whole lead-in panel breathes once per numeral. */
+@keyframes countdown-thump {
+  0% { transform: scale(1); }
+  18% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.animate-countdown-thump {
+  animation: countdown-thump 0.9s ease-out;
+}
+
+/* Answer feedback. Correct flashes outward in green, wrong shakes red —
+   two different channels (colour AND motion) so the outcome doesn't rely on
+   colour alone, which colour-blind players could not read. */
+@keyframes correct-flash {
+  0% { box-shadow: 0 0 0 0 rgba(31, 138, 90, 0.7); }
+  100% { box-shadow: 0 0 0 18px rgba(31, 138, 90, 0); }
+}
+.animate-correct-flash {
+  animation: correct-flash 0.75s ease-out;
+}
+
+/* Podium columns rise into place from the floor of the stage. */
+@keyframes podium-rise {
+  from { opacity: 0; transform: translate3d(0, 40px, 0) scaleY(0.82); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scaleY(1); }
+}
+.animate-podium-rise {
+  animation: podium-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Slow shimmer across the winner's plinth. */
+@keyframes crown-glow {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+}
+.animate-crown-glow {
+  animation: crown-glow 2.4s ease-in-out infinite;
+}
+
 /* Respect reduced-motion globally; components additionally gate their own
    GSAP timelines behind this same query. */
 @media (prefers-reduced-motion: reduce) {

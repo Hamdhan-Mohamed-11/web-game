@@ -21,8 +21,11 @@ export default function GlassPanel({
   children: ReactNode;
 }) {
   return (
+    // Deliberately narrower than the screen: the rows are name + score, so
+    // extra width only stretches whitespace between them and pushes the
+    // flanking artwork off the edges of the frame.
     <section
-      className="animate-rise-in relative flex min-h-0 w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-white/12 bg-white/[0.07] px-6 py-[2vh] shadow-[0_24px_80px_-20px_rgba(0,0,0,0.75)] backdrop-blur-2xl lg:max-w-4xl lg:px-8 2xl:max-w-5xl"
+      className="animate-rise-in relative flex min-h-0 w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-white/12 bg-white/[0.07] px-6 py-[2vh] shadow-[0_24px_80px_-20px_rgba(0,0,0,0.75)] backdrop-blur-2xl lg:max-w-2xl lg:px-7"
       style={{ animationDelay: "120ms" }}
     >
       {/* Specular highlight along the top edge. */}

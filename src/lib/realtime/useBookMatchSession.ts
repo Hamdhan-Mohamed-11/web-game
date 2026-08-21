@@ -8,6 +8,7 @@ export interface BookMatchSessionState {
   startedAt: string | null;
   endsAt: string | null;
   isFinished: boolean;
+  totalPoints: number;
 }
 
 /**
@@ -37,7 +38,7 @@ export function useBookMatchSession(roundId: string | undefined, participantId: 
       try {
         const { data } = await supabase
           .from("book_match_sessions")
-          .select("id, started_at, ends_at, is_finished")
+          .select("id, started_at, ends_at, is_finished, total_points")
           .eq("round_id", roundId as string)
           .eq("participant_id", participantId as string)
           .maybeSingle();
@@ -45,7 +46,13 @@ export function useBookMatchSession(roundId: string | undefined, participantId: 
         if (cancelled) return;
 
         if (data) {
-          setSession({ id: data.id, startedAt: data.started_at, endsAt: data.ends_at, isFinished: data.is_finished });
+          setSession({
+            id: data.id,
+            startedAt: data.started_at,
+            endsAt: data.ends_at,
+            isFinished: data.is_finished,
+            totalPoints: data.total_points,
+          });
 
           const { data: progress } = await supabase
             .from("book_match_progress")
@@ -79,7 +86,7 @@ export function useBookMatchSession(roundId: string | undefined, participantId: 
     if (error || !row) {
       throw new Error(error?.message ?? "Check-in failed");
     }
-    setSession({ id: row.id, startedAt: row.started_at, endsAt: row.ends_at, isFinished: false });
+    setSession({ id: row.id, startedAt: row.started_at, endsAt: row.ends_at, isFinished: false, totalPoints: 0 });
   }, [roundId, participantId]);
 
   const markMatched = useCallback((itemKey: string) => {

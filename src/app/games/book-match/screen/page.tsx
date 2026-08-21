@@ -3,13 +3,15 @@
 import { useRound } from "@/lib/realtime/useRound";
 import { useLeaderboard } from "@/lib/realtime/useLeaderboard";
 import { useLeadIn } from "@/lib/realtime/useLeadIn";
-import { TOTAL_PAIRS } from "@/lib/scoring/bookmatch";
+import { MATCH_ROUND_DURATION_MS, TOTAL_PAIRS } from "@/lib/scoring/bookmatch";
+import CountdownTimer from "@/components/shared/CountdownTimer";
 import Scoreboard from "@/components/shared/Scoreboard";
 import LeadIn from "@/components/shared/LeadIn";
 import WinnerReveal from "@/components/screen/WinnerReveal";
 import ScreenShell from "@/components/screen/ScreenShell";
 import GlassPanel from "@/components/screen/GlassPanel";
 import ScreenFooter from "@/components/screen/ScreenFooter";
+import BookMatchRegalia from "@/components/screen/BookMatchRegalia";
 
 const GAME_SLUG = "book-match";
 
@@ -29,7 +31,7 @@ export default function BookMatchScreenPage() {
 
   if (!round || round.status === "pending") {
     return (
-      <ScreenShell gameName={TITLE} center>
+      <ScreenShell gameName={TITLE} decor={<BookMatchRegalia />} center>
         <p className="animate-rise-in font-display text-[4vh] font-semibold uppercase tracking-[0.4em] text-gold-500">
           Get Ready
         </p>
@@ -39,7 +41,7 @@ export default function BookMatchScreenPage() {
 
   if (round.status === "confirmed") {
     return (
-      <ScreenShell center>
+      <ScreenShell decor={<BookMatchRegalia />} center>
         <WinnerReveal roundId={round.id} title="The Book Match Challenge" />
       </ScreenShell>
     );
@@ -47,15 +49,33 @@ export default function BookMatchScreenPage() {
 
   if (leadIn.pending) {
     return (
-      <ScreenShell gameName={TITLE} center>
-        <LeadIn count={leadIn.count} label={`${TOTAL_PAIRS} pairs · 75 seconds`} />
+      <ScreenShell gameName={TITLE} decor={<BookMatchRegalia />} center>
+        <LeadIn count={leadIn.count} label={`${TOTAL_PAIRS} pairs · 75 seconds`} alert />
       </ScreenShell>
     );
   }
 
   return (
-    <ScreenShell gameName={TITLE}>
-      <GlassPanel title="Live Top 10" aside={<ScreenFooter label={`${TOTAL_PAIRS} pairs · 75 seconds`} />}>
+    <ScreenShell gameName={TITLE} decor={<BookMatchRegalia />}>
+      <GlassPanel
+        title="Live Top 10"
+        aside={
+          <ScreenFooter
+            label={`${TOTAL_PAIRS} pairs`}
+            // The room could see the boards filling but had no idea how long
+            // was left — every other screen has a clock, and this one is the
+            // only game actually racing one.
+            timer={
+              <CountdownTimer
+                startedAt={round.startedAt}
+                durationMs={MATCH_ROUND_DURATION_MS}
+                size="5vh"
+                theme="dark"
+              />
+            }
+          />
+        }
+      >
         <Scoreboard rows={rows} showProgress progressTotal={TOTAL_PAIRS} theme="dark" />
       </GlassPanel>
     </ScreenShell>

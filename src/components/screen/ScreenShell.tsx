@@ -47,10 +47,10 @@ export default function ScreenShell({
             rather than pretending it has transparency. */}
         <div className="rounded-xl bg-cream-50 px-[1.4vh] py-[0.8vh] shadow-[0_8px_30px_-8px_rgba(0,0,0,0.6)]">
           <Image
-            src="/pick-a-book-logo.png"
+            src="/picklogo.png"
             alt="Pick a Book — Readers' Summit 2026"
-            width={826}
-            height={349}
+            width={1600}
+            height={763}
             priority
             className="h-[9vh] w-auto"
           />

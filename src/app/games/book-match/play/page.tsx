@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParticipant } from "@/lib/participant/useParticipant";
 import { useRound } from "@/lib/realtime/useRound";
 import { useBookMatchSession } from "@/lib/realtime/useBookMatchSession";
@@ -9,6 +9,7 @@ import { useLeadIn } from "@/lib/realtime/useLeadIn";
 import { getGameMeta } from "@/lib/games";
 import JoinForm from "@/components/participant/JoinForm";
 import MatchBoard from "@/components/participant/MatchBoard";
+import FinalResult from "@/components/participant/FinalResult";
 import GameLockedNotice from "@/components/participant/GameLockedNotice";
 import BrandMark from "@/components/shared/BrandMark";
 import LeadIn from "@/components/shared/LeadIn";
@@ -31,6 +32,17 @@ export default function BookMatchPlayPage() {
   const [finalPoints, setFinalPoints] = useState<number | null>(null);
   const [checkInError, setCheckInError] = useState<string | null>(null);
   const [checkInAttempt, setCheckInAttempt] = useState(0);
+
+  // Book Match ranks on who reached a tied total first, not on accumulated
+  // response time — same tie-break the LED leaderboard uses.
+  // Keyed on the id, not the round object: useRound hands back a fresh
+  // object on every realtime tick, which would rebuild this array constantly
+  // and re-fire the results fetch it feeds.
+  const resultRounds = useMemo(
+    () => (round ? [{ roundId: round.id, tieBreak: "reachedAt" as const }] : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [round?.id]
+  );
 
   useEffect(() => {
     if (!ceremonyDone || session) return;
@@ -73,16 +85,11 @@ export default function BookMatchPlayPage() {
 
   if (round?.status === "confirmed") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-cream-50 px-6 text-center">
-        <BrandMark />
-        <h1 className="mt-6 font-display text-3xl font-bold text-navy-900">Game over!</h1>
-        {finalPoints !== null && (
-          <p className="mt-3 text-lg text-navy-900">
-            Your final score: <span className="font-display font-bold text-gold-700">{finalPoints}</span> pts
-          </p>
-        )}
-        <p className="mt-4 text-sm text-ink-600">Look at the LED screen for the winners.</p>
-      </main>
+      <FinalResult
+        displayName={participant.displayName}
+        participantId={participant.id}
+        rounds={resultRounds}
+      />
     );
   }
 
@@ -114,7 +121,7 @@ export default function BookMatchPlayPage() {
   if (!session && !ceremonyDone) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-navy-950 px-6">
-        <LeadIn count={leadIn.count} size="phone" />
+        <LeadIn count={leadIn.count} size="phone" alert />
       </main>
     );
   }
@@ -148,6 +155,7 @@ export default function BookMatchPlayPage() {
       sessionId={session.id}
       startedAt={session.startedAt}
       initialMatchedItemKeys={matchedItemKeys}
+      initialTotalPoints={session.totalPoints}
       onFinished={setFinalPoints}
     />
   );

@@ -115,7 +115,20 @@ export interface Database {
           p_participant_id: string;
           p_selected_choice_index: number;
         };
-        Returns: undefined;
+        Returns: {
+          points: number;
+          total_points: number;
+          is_correct: boolean;
+          correct_choice_index: number;
+        }[];
+      };
+      get_question_result: {
+        Args: { p_question_state_id: string };
+        Returns: { correct_choice_index: number }[];
+      };
+      get_participant_rank: {
+        Args: { p_round_id: string; p_participant_id: string; p_tie_break?: string };
+        Returns: { rank: number; total_participants: number; total_points: number }[];
       };
       start_round: {
         Args: { p_round_id: string };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParticipant } from "@/lib/participant/useParticipant";
 import { useRound } from "@/lib/realtime/useRound";
 import { useQuestionState } from "@/lib/realtime/useQuestionState";
@@ -10,6 +10,7 @@ import { FIRST_LINES_QUESTIONS } from "@/lib/data/firstLines.questions";
 import { getGameMeta } from "@/lib/games";
 import JoinForm from "@/components/participant/JoinForm";
 import QuestionCard from "@/components/participant/QuestionCard";
+import FinalResult from "@/components/participant/FinalResult";
 import GameLockedNotice from "@/components/participant/GameLockedNotice";
 import BrandMark from "@/components/shared/BrandMark";
 
@@ -21,10 +22,13 @@ export default function FirstLinesPlayPage() {
   const { round } = useRound(GAME_SLUG, "main");
   const { current } = useQuestionState(round?.id);
   const { locks, loaded: locksLoaded } = useGameLocks();
-  const [finalPoints, setFinalPoints] = useState<number | null>(null);
+  const [myScore, setMyScore] = useState<number | null>(null);
 
+  // Picks up any score already on the board (e.g. after a page reload
+  // mid-round) so the running total doesn't reset to blank; each new answer
+  // then updates it locally via QuestionCard's onScoreUpdate.
   useEffect(() => {
-    if (round?.status !== "confirmed" || !participant) return;
+    if (!round?.id || !participant) return;
     const supabase = getBrowserSupabaseClient();
     supabase
       .from("leaderboard_entries")
@@ -32,8 +36,17 @@ export default function FirstLinesPlayPage() {
       .eq("round_id", round.id)
       .eq("participant_id", participant.id)
       .maybeSingle()
-      .then(({ data }) => setFinalPoints(data?.total_points ?? 0));
-  }, [round?.status, round?.id, participant]);
+      .then(({ data }) => setMyScore(data?.total_points ?? 0));
+  }, [round?.id, participant]);
+
+  // Memoised so FinalResult's effect isn't re-run by a fresh array identity
+  // on every realtime tick — hence keying on the id rather than the object,
+  // which useRound rebuilds each time.
+  const resultRounds = useMemo(
+    () => (round ? [{ roundId: round.id }] : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [round?.id]
+  );
 
   if (!ready) return null;
 
@@ -47,14 +60,11 @@ export default function FirstLinesPlayPage() {
 
   if (round?.status === "confirmed") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-cream-50 px-6 text-center">
-        <BrandMark />
-        <h1 className="mt-6 font-display text-3xl font-bold text-navy-900">Game over!</h1>
-        <p className="mt-3 text-lg text-navy-900">
-          {participant.displayName}, your final score: <span className="font-display font-bold text-gold-700">{finalPoints ?? "…"}</span> pts
-        </p>
-        <p className="mt-4 text-sm text-ink-600">Look at the LED screen for the winners.</p>
-      </main>
+      <FinalResult
+        displayName={participant.displayName}
+        participantId={participant.id}
+        rounds={resultRounds}
+      />
     );
   }
 
@@ -80,6 +90,8 @@ export default function FirstLinesPlayPage() {
       prompt={question.line}
       choices={question.choices}
       startedAt={current.startedAt}
+      myScore={myScore}
+      onScoreUpdate={setMyScore}
     />
   );
 }

@@ -48,10 +48,17 @@ interface MatchBoardProps {
   sessionId: string;
   startedAt: string | null;
   initialMatchedItemKeys: Set<string>;
+  initialTotalPoints: number;
   onFinished: (totalPoints: number) => void;
 }
 
-export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKeys, onFinished }: MatchBoardProps) {
+export default function MatchBoard({
+  sessionId,
+  startedAt,
+  initialMatchedItemKeys,
+  initialTotalPoints,
+  onFinished,
+}: MatchBoardProps) {
   const [options] = useState(() => shuffled(BOOK_MATCH_OPTIONS));
   const [lockedItemKeys, setLockedItemKeys] = useState<Set<string>>(initialMatchedItemKeys);
   const [lockedOptionKeys, setLockedOptionKeys] = useState<Set<string>>(new Set());
@@ -60,6 +67,7 @@ export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKey
   const [timeUp, setTimeUp] = useState(false);
   const [wrongPulse, setWrongPulse] = useState<string | null>(null);
   const [justMatched, setJustMatched] = useState<string | null>(null);
+  const [score, setScore] = useState(initialTotalPoints);
 
   const progress = lockedItemKeys.size;
   const done = progress >= TOTAL_PAIRS || timeUp;
@@ -97,6 +105,7 @@ export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKey
     if (error || !result) return;
 
     if (result.is_correct) {
+      setScore(result.total_points);
       setJustMatched(itemKey);
       setTimeout(() => {
         setLockedItemKeys((prev) => new Set(prev).add(itemKey));
@@ -145,6 +154,9 @@ export default function MatchBoard({ sessionId, startedAt, initialMatchedItemKey
         <div className="flex shrink-0 items-center justify-between gap-3 pb-2">
           <BrandMark size="compact" />
           <div className="flex items-center gap-3">
+            <span className="rounded-full bg-gold-600 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
+              {score} pts
+            </span>
             <span className="rounded-full bg-navy-900 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
               {progress}/{TOTAL_PAIRS}
             </span>

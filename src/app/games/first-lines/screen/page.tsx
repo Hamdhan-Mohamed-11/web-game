@@ -12,6 +12,7 @@ import WinnerReveal from "@/components/screen/WinnerReveal";
 import ScreenShell from "@/components/screen/ScreenShell";
 import GlassPanel from "@/components/screen/GlassPanel";
 import ScreenFooter from "@/components/screen/ScreenFooter";
+import FirstLinesRegalia from "@/components/screen/FirstLinesRegalia";
 
 const GAME_SLUG = "first-lines";
 
@@ -29,7 +30,7 @@ export default function FirstLinesScreenPage() {
 
   if (!round || round.status === "pending") {
     return (
-      <ScreenShell gameName={TITLE} center>
+      <ScreenShell gameName={TITLE} decor={<FirstLinesRegalia />} center>
         <p className="animate-rise-in font-display text-[4vh] font-semibold uppercase tracking-[0.4em] text-gold-500">
           Ready
         </p>
@@ -39,22 +40,26 @@ export default function FirstLinesScreenPage() {
 
   if (round.status === "confirmed") {
     return (
-      <ScreenShell center>
+      <ScreenShell decor={<FirstLinesRegalia />} center>
         <WinnerReveal roundId={round.id} title="The Famous First Lines Challenge" />
       </ScreenShell>
     );
   }
 
-  if (leadIn.pending && current) {
+  if (current?.questionIndex === 0 && leadIn.pending) {
     return (
-      <ScreenShell gameName={TITLE} center>
-        <LeadIn count={leadIn.count} label={`Question ${current.questionIndex + 1} / ${round.totalQuestions}`} />
+      <ScreenShell gameName={TITLE} decor={<FirstLinesRegalia />} center>
+        <LeadIn
+          count={leadIn.count}
+          label={`Question ${current.questionIndex + 1} / ${round.totalQuestions}`}
+          alert
+        />
       </ScreenShell>
     );
   }
 
   return (
-    <ScreenShell gameName={TITLE}>
+    <ScreenShell gameName={TITLE} decor={<FirstLinesRegalia />}>
       <GlassPanel
         title="Live Top 10"
         aside={
