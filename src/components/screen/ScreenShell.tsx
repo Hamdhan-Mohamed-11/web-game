@@ -17,12 +17,23 @@ export default function ScreenShell({
   decor,
   center = false,
   compact = false,
+  headerLeft,
+  headerRight,
 }: {
   gameName?: ReactNode;
   children: ReactNode;
   /** Game-specific background artwork, rendered behind the content. */
   decor?: ReactNode;
   center?: boolean;
+  /**
+   * Optional flank content for the header's dead corners.
+   *
+   * Absolutely positioned rather than folded into the flex row on purpose:
+   * the logo and title stay centred on the wall's midline whatever these
+   * contain, and a screen that passes neither renders exactly as before.
+   */
+  headerLeft?: ReactNode;
+  headerRight?: ReactNode;
   /**
    * Trades header height for content height and lets the child span the
    * full width. For dense dashboards that need every vertical pixel on a
@@ -54,6 +65,13 @@ export default function ScreenShell({
           compact ? "justify-center gap-[2.4vh]" : "flex-col"
         }`}
       >
+        {headerLeft && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2">{headerLeft}</div>
+        )}
+        {headerRight && (
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">{headerRight}</div>
+        )}
+
         {/* The brand asset has a cream background baked into the file, so on
             a dark screen it's presented as a deliberate printed plaque
             rather than pretending it has transparency. */}
