@@ -93,6 +93,34 @@ export interface Database {
         Update: Partial<BookMatchSessionsRow>;
         Relationships: [];
       };
+      networking_participants: {
+        Row: {
+          id: string;
+          display_name: string;
+          company: string | null;
+          contact: string | null;
+          created_at: string;
+        };
+        Insert: Partial<NetworkingParticipantsRow> & Pick<NetworkingParticipantsRow, "display_name">;
+        Update: Partial<NetworkingParticipantsRow>;
+        Relationships: [];
+      };
+      networking_connections: {
+        Row: {
+          id: string;
+          participant_id: string;
+          person_met: string;
+          book_title: string;
+          person_met_norm: string | null;
+          book_title_norm: string | null;
+          is_hidden: boolean;
+          created_at: string;
+        };
+        Insert: Partial<NetworkingConnectionsRow> &
+          Pick<NetworkingConnectionsRow, "participant_id" | "person_met" | "book_title">;
+        Update: Partial<NetworkingConnectionsRow>;
+        Relationships: [];
+      };
     };
     Views: {
       book_match_progress: {
@@ -129,6 +157,37 @@ export interface Database {
       get_participant_rank: {
         Args: { p_round_id: string; p_participant_id: string; p_tie_break?: string };
         Returns: { rank: number; total_participants: number; total_points: number }[];
+      };
+      networking_join: {
+        Args: { p_display_name: string; p_company?: string; p_contact?: string };
+        Returns: string;
+      };
+      networking_add_connection: {
+        Args: { p_participant_id: string; p_person_met: string; p_book_title: string };
+        Returns: { connection_count: number; duplicate: boolean }[];
+      };
+      networking_stats: {
+        Args: Record<string, never>;
+        Returns: {
+          total_connections: number;
+          total_participants: number;
+          unique_titles: number;
+          books_discussed: number;
+          top_book: string | null;
+          top_book_count: number | null;
+        }[];
+      };
+      networking_top_connectors: {
+        Args: { p_limit?: number };
+        Returns: { participant_id: string; display_name: string; connections: number; reached_at: string }[];
+      };
+      networking_top_books: {
+        Args: { p_limit?: number };
+        Returns: { title: string; mentions: number }[];
+      };
+      networking_recent_books: {
+        Args: { p_limit?: number };
+        Returns: { title: string; created_at: string }[];
       };
       start_round: {
         Args: { p_round_id: string };
@@ -177,3 +236,5 @@ type ParticipantsRow = Database["public"]["Tables"]["participants"]["Row"];
 type LeaderboardEntriesRow = Database["public"]["Tables"]["leaderboard_entries"]["Row"];
 type RoundResultsRow = Database["public"]["Tables"]["round_results"]["Row"];
 type BookMatchSessionsRow = Database["public"]["Tables"]["book_match_sessions"]["Row"];
+type NetworkingParticipantsRow = Database["public"]["Tables"]["networking_participants"]["Row"];
+type NetworkingConnectionsRow = Database["public"]["Tables"]["networking_connections"]["Row"];

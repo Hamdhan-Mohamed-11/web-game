@@ -6,6 +6,20 @@ export function CrownIcon({ className = "" }: { className?: string }) {
   );
 }
 
+/**
+ * An open book. Used on the LED screen instead of 📖: the machine driving a
+ * venue display often has no emoji font installed, and a missing glyph shows
+ * as a tofu box in front of the whole room.
+ */
+export function BookIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M12 7c-1.8-1.3-4-2-6.5-2H3v13h2.5c2.5 0 4.7.7 6.5 2 1.8-1.3 4-2 6.5-2H21V5h-2.5C16 5 13.8 5.7 12 7Z" />
+      <path d="M12 7v13" />
+    </svg>
+  );
+}
+
 export function TrophyIcon({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">

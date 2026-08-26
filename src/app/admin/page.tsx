@@ -4,6 +4,7 @@ import LogoutButton from "./LogoutButton";
 import GameLockToggle from "./GameLockToggle";
 import BrandMark from "@/components/shared/BrandMark";
 import Card from "@/components/shared/Card";
+import { buttonClassName } from "@/components/shared/Button";
 
 const STEPS = [
   {
@@ -66,6 +67,30 @@ export default function AdminHubPage() {
             ))}
           </ol>
         </Card>
+
+        {/* The networking game isn't in GAMES: it has no rounds and no lock,
+            because it runs for the whole evening alongside whichever quiz is
+            open rather than taking its turn. */}
+        <div className="mb-4 flex flex-col gap-4 rounded-2xl border border-gold-500/40 bg-gold-100/40 p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <h2 className="font-display text-lg font-semibold text-navy-900">The Networking Game</h2>
+            <p className="text-sm text-ink-600">
+              Runs all evening — meet a reader, discover a book. Always open, no unlock needed.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-start gap-3">
+            <Link href="/networking/admin" className={buttonClassName("navy", "px-4 py-2.5 text-sm")}>
+              Admin panel
+            </Link>
+            <Link
+              href="/networking/screen"
+              target="_blank"
+              className={buttonClassName("outline", "px-4 py-2.5 text-sm")}
+            >
+              Live screen ↗
+            </Link>
+          </div>
+        </div>
 
         <div className="flex flex-col gap-4">
           {GAMES.map((game) => (

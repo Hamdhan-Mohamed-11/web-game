@@ -26,9 +26,19 @@ const DISPLAY_ORDER = [2, 1, 3] as const;
  *
  * Reveal runs lowest place first so the room's attention arrives on the
  * winner last: the delay is derived from the place, not from DOM order,
- * which is why the columns can sit in visual order in the markup.
+ * which is why the columns can sit in visual order in the markup. The
+ * caller supplies the base offset so the podium can continue a countdown
+ * that started with the runners-up below it.
  */
-export default function Podium({ winners }: { winners: PodiumWinner[] }) {
+export default function Podium({
+  winners,
+  baseDelayMs = 0,
+  stepMs = 700,
+}: {
+  winners: PodiumWinner[];
+  baseDelayMs?: number;
+  stepMs?: number;
+}) {
   const byPlace = new Map(winners.map((w) => [w.place, w]));
 
   return (
@@ -40,7 +50,7 @@ export default function Podium({ winners }: { winners: PodiumWinner[] }) {
         const col = COLUMN[place];
         const medalIndex = place - 1;
         // 3rd reveals first, 1st last.
-        const delayMs = (3 - place) * 260;
+        const delayMs = baseDelayMs + (3 - place) * stepMs;
 
         return (
           <div

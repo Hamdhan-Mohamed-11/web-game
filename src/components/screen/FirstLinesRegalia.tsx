@@ -5,5 +5,5 @@ import SideRegalia from "./SideRegalia";
  * a writer at her candlelit desk on the right, both facing the standings.
  */
 export default function FirstLinesRegalia() {
-  return <SideRegalia left="/firstlineleft.png" right="/firstlineright.png" />;
+  return <SideRegalia left="/firstlineleft.webp" right="/firstlineright.webp" />;
 }

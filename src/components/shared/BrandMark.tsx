@@ -9,7 +9,7 @@ export default function BrandMark({ tagline, size = "default" }: BrandMarkProps)
   return (
     <div className="flex flex-col items-center text-center">
       <Image
-        src="/picklogo.png"
+        src="/picklogo.webp"
         alt="Pick a Book — Readers' Summit 2026"
         width={1600}
         height={763}

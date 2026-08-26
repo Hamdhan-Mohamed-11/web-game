@@ -55,7 +55,7 @@ export default function BookMatchAdminPage() {
 
   function handleConfirmWinners() {
     if (!round) return;
-    const winners = leaderboard.slice(0, 3).map((r, i) => ({
+    const winners = leaderboard.slice(0, 6).map((r, i) => ({
       place: i + 1,
       displayName: r.displayName,
       points: r.totalPoints,
@@ -126,7 +126,7 @@ export default function BookMatchAdminPage() {
               Start Challenge
             </Button>
             <Button variant="gold" onClick={handleConfirmWinners} disabled={busy || !round || round.status !== "active"}>
-              Confirm Top 2 &amp; Reveal
+              Confirm Top 6 &amp; Reveal
             </Button>
           </div>
 

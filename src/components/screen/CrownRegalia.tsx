@@ -9,5 +9,5 @@ import SideRegalia from "./SideRegalia";
  * without any cropping.
  */
 export default function CrownRegalia() {
-  return <SideRegalia left="/king.png" right="/queen.png" />;
+  return <SideRegalia left="/king.webp" right="/queen.webp" />;
 }

@@ -50,6 +50,17 @@ export default function Home() {
               </Link>
             );
           })}
+
+          {/* Always available, never locked: the networking game runs for the
+              whole evening alongside whichever quiz is open, so anyone who
+              scans the main code at any point can still take part. */}
+          <Link
+            href="/networking"
+            className="rounded-xl border-2 border-navy-900 bg-navy-900 px-5 py-4 text-left shadow-card transition-colors hover:bg-navy-800"
+          >
+            <div className="font-display font-semibold text-white">The Networking Game</div>
+            <div className="text-sm text-gold-400">Meet a reader, discover a book — open all night</div>
+          </Link>
         </div>
       </div>
     </main>
