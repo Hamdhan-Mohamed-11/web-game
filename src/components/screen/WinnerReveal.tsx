@@ -154,20 +154,21 @@ export default function WinnerReveal({
         </div>
 
         {winners && variant === "podium" && (
-          // Podium centred with the runners-up alongside rather than beneath:
-          // on a 2.4:1 wall there is width to spare and almost no height, and
-          // stacking them pushed the plinths off the bottom of the panel.
-          <div className="flex w-full items-end justify-center gap-[3vw]">
+          // Runners-up sit beneath the plinths, so the whole reveal is one
+          // upward sweep: 6th at the very bottom, climbing to 4th, then the
+          // columns rise 3rd, 2nd, 1st. The plinth heights in Podium are cut
+          // to the bone to buy this band its room on a 640px-tall wall.
+          <div className="flex w-full flex-col items-center gap-[1.8vh]">
             <Podium winners={winners} baseDelayMs={podiumBaseMs} stepMs={STEP_MS} />
 
             {runnersUp.length > 0 && (
-              <ol className="flex w-[26vw] max-w-md shrink-0 flex-col gap-[0.9vh] pb-[2vh]">
+              <ol className="flex w-full max-w-2xl flex-col gap-[0.7vh]">
                 {/* Ordered 4,5,6 down the page but revealed 6,5,4 — the eye
                     reads a ranking top-down while the reveal climbs. */}
                 {[...runnersUp].reverse().map((w) => (
                   <li
                     key={w.place}
-                    className="animate-rise-in flex items-center gap-[1.2vh] rounded-xl border border-white/10 bg-white/[0.07] px-[1.4vh] py-[0.8vh] backdrop-blur-sm"
+                    className="animate-rise-in flex items-center gap-[1.4vh] rounded-[1vh] border border-gold-500/25 bg-gradient-to-r from-white/[0.10] to-white/[0.04] px-[1.6vh] py-[0.7vh] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm"
                     style={{
                       // Delay comes from the reveal order, not the place, so a
                       // short field still starts at zero.
@@ -175,13 +176,15 @@ export default function WinnerReveal({
                       animationFillMode: "backwards",
                     }}
                   >
-                    <span className="flex h-[3.4vh] w-[3.4vh] shrink-0 items-center justify-center rounded-full bg-white/10 font-display text-[1.8vh] font-bold text-white/70">
+                    <span className="flex h-[3.6vh] w-[3.6vh] shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 font-display text-[2vh] font-bold text-white/85">
                       {w.place}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-left font-medium text-white text-[2.2vh]">
+                    <span className="min-w-0 flex-1 truncate text-left font-display font-semibold text-white text-[2.4vh]">
                       {w.displayName}
                     </span>
-                    <span className="shrink-0 font-display text-[2.4vh] font-bold text-gold-400">{w.points}</span>
+                    <span className="shrink-0 font-display text-[2.4vh] font-bold text-gold-400">
+                      {w.points} pts
+                    </span>
                   </li>
                 ))}
               </ol>

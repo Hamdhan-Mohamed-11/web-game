@@ -50,11 +50,17 @@ const LEAF_PATH = "M0 0 C7 -6, 19 -6.5, 28 0 C19 6.5, 7 6, 0 0 Z";
  * to get the matching half — a wreath drawn as two independent halves never
  * quite lines up.
  */
-export function LaurelBranch({ className = "" }: { className?: string }) {
+export function LaurelBranch({
+  className = "",
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   const d = `M${STEM[0].x} ${STEM[0].y} C${STEM[1].x} ${STEM[1].y}, ${STEM[2].x} ${STEM[2].y}, ${STEM[3].x} ${STEM[3].y}`;
 
   return (
-    <svg viewBox="0 0 104 180" className={className} aria-hidden="true">
+    <svg viewBox="0 0 104 180" className={className} style={style} aria-hidden="true">
       <defs>
         <linearGradient id="laurel-gold" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#FDE9A9" />
@@ -84,6 +90,83 @@ export function LaurelBranch({ className = "" }: { className?: string }) {
           />
         );
       })}
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------- wreath */
+
+const WREATH_R = 68;
+/** Degrees in SVG space: 90 is straight down, 180 is left, 270 is up. */
+const WREATH_FROM = 98;
+const WREATH_TO = 214;
+const WREATH_LEAVES = 8;
+
+function polar(deg: number, r = WREATH_R) {
+  const a = (deg * Math.PI) / 180;
+  return { x: 100 + Math.cos(a) * r, y: 100 + Math.sin(a) * r };
+}
+
+/**
+ * An open laurel wreath, drawn to sit *behind* a circular medal rather than
+ * beside it.
+ *
+ * Flanking branches were the first attempt and read as two gold specks at
+ * medal size — a wreath only says "award" when it actually curves around
+ * something. Leaves follow the same circle as the stem and lean back along
+ * it, which is what stops them looking like a sunburst.
+ */
+export function LaurelWreath({
+  className = "",
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const from = polar(WREATH_FROM);
+  const to = polar(WREATH_TO);
+
+  const leaves = Array.from({ length: WREATH_LEAVES }, (_, i) => {
+    const t = i / (WREATH_LEAVES - 1);
+    const theta = WREATH_FROM + t * (WREATH_TO - WREATH_FROM);
+    return { theta, ...polar(theta), scale: 1.04 - i * 0.055 };
+  });
+
+  return (
+    <svg viewBox="0 0 200 200" className={className} style={style} aria-hidden="true">
+      <defs>
+        <linearGradient id="wreath-gold" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0%" stopColor="#B8791F" />
+          <stop offset="35%" stopColor="#F0C868" />
+          <stop offset="70%" stopColor="#FDE9A9" />
+          <stop offset="100%" stopColor="#C98A28" />
+        </linearGradient>
+      </defs>
+
+      {/* Left half drawn once, then mirrored — two hand-placed halves never
+          quite match, and the asymmetry is obvious on a ten-foot screen. */}
+      {[false, true].map((mirror) => (
+        <g
+          key={String(mirror)}
+          transform={mirror ? "translate(200 0) scale(-1 1)" : undefined}
+        >
+          <path
+            d={`M${from.x} ${from.y} A${WREATH_R} ${WREATH_R} 0 0 0 ${to.x} ${to.y}`}
+            stroke="url(#wreath-gold)"
+            strokeWidth="4"
+            strokeLinecap="round"
+            fill="none"
+          />
+          {leaves.map((l) => (
+            <path
+              key={l.theta}
+              d={LEAF_PATH}
+              fill="url(#wreath-gold)"
+              transform={`translate(${l.x} ${l.y}) rotate(${l.theta - 150}) scale(${l.scale})`}
+            />
+          ))}
+        </g>
+      ))}
     </svg>
   );
 }
