@@ -32,6 +32,37 @@ const ALLOWED_ORIGINS = new Set([
 const MAX_QUESTION = 500;
 const MAX_NAME = 80;
 
+/**
+ * Per-IP throttle.
+ *
+ * CORS is not access control -- it stops a browser on another site, and does
+ * nothing about curl. Verified against production: a request with a hostile
+ * Origin got no allow header (so a real browser would refuse the response)
+ * but the row still inserted, because curl does not care. This is the part
+ * that actually limits how fast one source can fill the moderator's queue.
+ *
+ * In-memory is sufficient: one Node process serves this app, the window is
+ * an evening, and losing the counters on restart is harmless.
+ */
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 6;
+const hits = new Map<string, number[]>();
+
+function rateLimited(key: string): boolean {
+  const now = Date.now();
+  const recent = (hits.get(key) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
+  recent.push(now);
+  hits.set(key, recent);
+
+  // Opportunistic sweep so the map cannot grow without bound over an event.
+  if (hits.size > 5000) {
+    for (const [k, v] of hits) {
+      if (v.every((t) => now - t >= RATE_WINDOW_MS)) hits.delete(k);
+    }
+  }
+  return recent.length > RATE_MAX;
+}
+
 function corsHeaders(origin: string | null): Record<string, string> {
   // Echo the origin only when it is one of ours. An unknown origin gets no
   // CORS header at all, and the browser refuses the response.
@@ -54,6 +85,23 @@ export async function POST(request: Request) {
   const origin = request.headers.get("origin");
   const cors = corsHeaders(origin);
 
+  // An Origin that is present but not ours is a cross-site caller that a
+  // browser would have blocked anyway; refuse it outright rather than only
+  // withholding the header. A missing Origin is left alone -- privacy tools
+  // strip it, and the rate limit below covers that case.
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    return NextResponse.json({ success: false, error: "Not allowed" }, { status: 403 });
+  }
+
+  const fwdRaw = request.headers.get("x-forwarded-for") ?? "";
+  const clientIp = fwdRaw.split(",")[0]?.trim() || "unknown";
+  if (rateLimited(clientIp)) {
+    return NextResponse.json(
+      { success: false, error: "Too many questions just now — try again in a minute." },
+      { status: 429, headers: cors }
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const question = typeof body?.question === "string" ? body.question.trim() : "";
   const rawName = typeof body?.name === "string" ? body.name.trim() : "";
@@ -75,9 +123,7 @@ export async function POST(request: Request) {
   // overwritten with the real peer (never appended), so the first value is
   // trustworthy here; only the first two octets are kept, which is enough to
   // spot one device flooding the queue and not enough to identify anyone.
-  const fwd = request.headers.get("x-forwarded-for") ?? "";
-  const ip = fwd.split(",")[0]?.trim() ?? "";
-  const submittedFrom = ip.split(".").slice(0, 2).join(".") || null;
+  const submittedFrom = clientIp.split(".").slice(0, 2).join(".") || null;
 
   const supabase = getServiceSupabaseClient();
   const { error } = await supabase.from("panel_questions").insert({
