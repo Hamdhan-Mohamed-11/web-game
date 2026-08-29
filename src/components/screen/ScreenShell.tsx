@@ -72,19 +72,27 @@ export default function ScreenShell({
           <div className="absolute right-0 top-1/2 -translate-y-1/2">{headerRight}</div>
         )}
 
-        {/* The brand asset has a cream background baked into the file, so on
-            a dark screen it's presented as a deliberate printed plaque
-            rather than pretending it has transparency. */}
-        <div className="rounded-xl bg-cream-50 px-[1.4vh] py-[0.8vh] shadow-[0_8px_30px_-8px_rgba(0,0,0,0.6)]">
-          <Image
-            src="/picklogo.webp"
-            alt="Pick a Book — Readers' Summit 2026"
-            width={1600}
-            height={763}
-            priority
-            className={compact ? "h-[12vh] w-auto" : "h-[16vh] w-auto"}
-          />
-        </div>
+        {/*
+          The reversed mark, sitting straight on the wall with no plaque.
+
+          The supplied logo is transparent; the cream rectangle here was a
+          card we drew, and it existed for a real reason — the logo's ink is
+          navy #081878, which disappears on a navy screen. Deleting the card
+          alone would have deleted half the logo, so the ink is recoloured
+          instead (see scripts/make-reverse-logo.mjs) and the card is gone.
+          The drop-shadow does the separating a rectangle used to do.
+
+          The navy original still serves the admin and player pages, which
+          are light. Two grounds, two logos — as a brand kit would ship it.
+        */}
+        <Image
+          src="/picklogo-reverse.webp"
+          alt="Pick a Book — Readers' Summit 2026"
+          width={1600}
+          height={763}
+          priority
+          className={`${compact ? "h-[13vh]" : "h-[16vh]"} w-auto [filter:drop-shadow(0_6px_18px_rgba(0,0,0,0.55))]`}
+        />
 
         {gameName && (
           <h1

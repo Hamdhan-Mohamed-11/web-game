@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browserClient";
 import { useNetworkingParticipant } from "@/lib/networking/useNetworkingParticipant";
+import { formatCountdown, useNetworkingRound } from "@/lib/networking/useNetworkingRound";
 import { playCorrect, playWrong } from "@/lib/audio/sfx";
 import BrandMark from "@/components/shared/BrandMark";
 import Button from "@/components/shared/Button";
@@ -13,8 +14,41 @@ const FIELD =
 
 const LABEL = "mb-1.5 block text-sm font-semibold text-navy-900";
 
+/**
+ * The round clock, in the participant's pocket.
+ *
+ * Shown on every screen after joining, because the pressure is the point of
+ * the game: someone who cannot see the clock has no reason to stop chatting
+ * and go meet a fourth person. Renders nothing at all before a host starts
+ * the round -- a countdown that is not running should not be on screen.
+ */
+function TimePill({ secondsLeft, isOpen }: { secondsLeft: number | null; isOpen: boolean }) {
+  if (secondsLeft === null) return null;
+  const urgent = isOpen && secondsLeft <= 60;
+
+  return (
+    <div
+      className={`mx-auto mt-4 flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold tabular-nums ${
+        !isOpen
+          ? "bg-navy-100 text-navy-900"
+          : urgent
+            ? "bg-cream-200 text-danger-600 ring-1 ring-danger-600/40"
+            : "bg-gold-100 text-gold-700"
+      }`}
+      role="timer"
+      aria-live="off"
+    >
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em]">
+        {isOpen ? "Time left" : "Time up"}
+      </span>
+      {isOpen && <span className="text-base">{formatCountdown(secondsLeft)}</span>}
+    </div>
+  );
+}
+
 export default function NetworkingPage() {
   const { participant, ready, join, forget } = useNetworkingParticipant();
+  const round = useNetworkingRound();
 
   // Registration
   const [name, setName] = useState("");
@@ -69,6 +103,13 @@ export default function NetworkingPage() {
         setError("We lost your registration — please enter your name again.");
         return;
       }
+      // The server refused on the clock. It is the authority, not this
+      // device: a phone running fast can still be showing 0:03 here.
+      if (rpcError.message.includes("round is closed")) {
+        round.refresh();
+        setError("Time's up — that one didn't count.");
+        return;
+      }
       setError("That didn't save. Check your signal and tap again.");
       return;
     }
@@ -94,6 +135,30 @@ export default function NetworkingPage() {
   }
 
   if (!ready) return null;
+
+  // ------------------------------------------------------------- time is up
+  //
+  // Checked before the registration form on purpose. A late scan used to be
+  // able to register and only then be told the round was over, which left a
+  // participant row that can never add a connection -- inflating "readers
+  // joined" on the wall with people who never played.
+  if (round.loaded && !round.isOpen) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-cream-50 px-6 text-center">
+        <BrandMark />
+        <h1 className="mt-8 font-display text-3xl font-bold text-navy-900">Time&apos;s up!</h1>
+        <p className="mt-3 max-w-xs text-lg text-ink-600">
+          Networking has closed. Look at the big screen for tonight&apos;s top
+          connectors and the books the room was talking about.
+        </p>
+        {participant && (
+          <p className="mt-6 text-sm text-ink-600">
+            Thanks for playing, {participant.displayName}.
+          </p>
+        )}
+      </main>
+    );
+  }
 
   // ---------------------------------------------------------------- register
   if (!participant) {
@@ -184,10 +249,12 @@ export default function NetworkingPage() {
           {confirmedCount === 1 ? "reader" : "readers"} tonight.
         </p>
 
+        <TimePill secondsLeft={round.secondsLeft} isOpen={round.isOpen} />
+
         <Button
           variant="gold"
           onClick={() => setConfirmedCount(null)}
-          className="mt-8 w-full max-w-xs text-base"
+          className="mt-6 w-full max-w-xs text-base"
         >
           + Meet another reader
         </Button>
@@ -207,6 +274,8 @@ export default function NetworkingPage() {
         <h1 className="mt-2 text-center font-display text-2xl font-bold leading-snug text-navy-900">
           Who did you just meet?
         </h1>
+
+        <TimePill secondsLeft={round.secondsLeft} isOpen={round.isOpen} />
 
         <form onSubmit={handleAddConnection} className="mt-7 flex flex-col gap-5">
           <div>

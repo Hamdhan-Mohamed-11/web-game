@@ -5,6 +5,7 @@ import Link from "next/link";
 import BrandMark from "@/components/shared/BrandMark";
 import Button, { buttonClassName } from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
+import RoundTimer from "./RoundTimer";
 
 interface AdminData {
   totals: { participants: number; connections: number; hidden: number; uniqueTitles: number };
@@ -139,6 +140,8 @@ export default function NetworkingAdminPage() {
 
         {error && <p className="mb-4 text-sm text-danger-600">{error}</p>}
         {!data && !error && <p className="text-sm text-ink-600">Loading…</p>}
+
+        <RoundTimer />
 
         {data && (
           <>

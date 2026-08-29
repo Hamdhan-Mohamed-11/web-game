@@ -121,6 +121,22 @@ export interface Database {
         Update: Partial<NetworkingConnectionsRow>;
         Relationships: [];
       };
+      /**
+       * Single row, keyed on a boolean that can only be true. Only the admin
+       * route writes here; participants read the deadline through
+       * networking_round_state, which is security definer.
+       */
+      networking_round: {
+        Row: {
+          id: boolean;
+          started_at: string | null;
+          duration_seconds: number;
+          updated_at: string;
+        };
+        Insert: Partial<NetworkingRoundRow>;
+        Update: Partial<NetworkingRoundRow>;
+        Relationships: [];
+      };
     };
     Views: {
       book_match_progress: {
@@ -165,6 +181,24 @@ export interface Database {
       networking_add_connection: {
         Args: { p_participant_id: string; p_person_met: string; p_book_title: string };
         Returns: { connection_count: number; duplicate: boolean }[];
+      };
+      networking_round_state: {
+        Args: Record<string, never>;
+        Returns: {
+          started_at: string | null;
+          ends_at: string | null;
+          duration_seconds: number;
+          server_now: string;
+          is_open: boolean;
+        }[];
+      };
+      networking_round_begin: {
+        Args: { p_duration_seconds: number };
+        Returns: undefined;
+      };
+      networking_round_end: {
+        Args: Record<string, never>;
+        Returns: undefined;
       };
       networking_stats: {
         Args: Record<string, never>;
@@ -238,3 +272,4 @@ type RoundResultsRow = Database["public"]["Tables"]["round_results"]["Row"];
 type BookMatchSessionsRow = Database["public"]["Tables"]["book_match_sessions"]["Row"];
 type NetworkingParticipantsRow = Database["public"]["Tables"]["networking_participants"]["Row"];
 type NetworkingConnectionsRow = Database["public"]["Tables"]["networking_connections"]["Row"];
+type NetworkingRoundRow = Database["public"]["Tables"]["networking_round"]["Row"];
