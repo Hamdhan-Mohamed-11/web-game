@@ -126,6 +126,20 @@ export interface Database {
        * route writes here; participants read the deadline through
        * networking_round_state, which is security definer.
        */
+      panel_questions: {
+        Row: {
+          id: string;
+          question: string;
+          asker_name: string | null;
+          status: "new" | "starred" | "answered" | "hidden";
+          submitted_from: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<PanelQuestionsRow> & Pick<PanelQuestionsRow, "question">;
+        Update: Partial<PanelQuestionsRow>;
+        Relationships: [];
+      };
       networking_round: {
         Row: {
           id: boolean;
@@ -273,3 +287,4 @@ type BookMatchSessionsRow = Database["public"]["Tables"]["book_match_sessions"][
 type NetworkingParticipantsRow = Database["public"]["Tables"]["networking_participants"]["Row"];
 type NetworkingConnectionsRow = Database["public"]["Tables"]["networking_connections"]["Row"];
 type NetworkingRoundRow = Database["public"]["Tables"]["networking_round"]["Row"];
+type PanelQuestionsRow = Database["public"]["Tables"]["panel_questions"]["Row"];
