@@ -86,12 +86,12 @@ export default function ScreenShell({
           are light. Two grounds, two logos — as a brand kit would ship it.
         */}
         <Image
-          src="/picklogo-reverse.webp"
-          alt="Pick a Book — Readers' Summit 2026"
-          width={1600}
-          height={763}
+          src="/summit-logo-reverse.webp"
+          alt="Pick a Book — Readers' Summit 2026, powered by Zerostix"
+          width={1692}
+          height={930}
           priority
-          className={`${compact ? "h-[13vh]" : "h-[16vh]"} w-auto [filter:drop-shadow(0_6px_18px_rgba(0,0,0,0.55))]`}
+          className={`${compact ? "h-[15vh]" : "h-[16vh]"} w-auto [filter:drop-shadow(0_6px_18px_rgba(0,0,0,0.55))]`}
         />
 
         {gameName && (

@@ -29,8 +29,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SRC = path.join(root, "public", "picklogo.webp");
-const OUT = path.join(root, "public", "picklogo-reverse.webp");
+const SRC = path.join(root, "public", "summit-logo.webp");
+const OUT = path.join(root, "public", "summit-logo-reverse.webp");
 
 /** Darkest and lightest cream the navy is mapped onto. */
 const CREAM_DARK = [0xef, 0xe6, 0xd6];
