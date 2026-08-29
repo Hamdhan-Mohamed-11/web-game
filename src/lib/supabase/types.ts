@@ -131,7 +131,7 @@ export interface Database {
           id: string;
           question: string;
           asker_name: string | null;
-          status: "new" | "starred" | "answered" | "hidden";
+          status: "new" | "shortlisted" | "answered" | "hidden";
           submitted_from: string | null;
           created_at: string;
           updated_at: string;

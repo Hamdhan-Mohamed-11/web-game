@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     totals: {
       all: rows.length,
       new: rows.filter((r) => r.status === "new").length,
-      starred: rows.filter((r) => r.status === "starred").length,
+      shortlisted: rows.filter((r) => r.status === "shortlisted").length,
       answered: rows.filter((r) => r.status === "answered").length,
       hidden: rows.filter((r) => r.status === "hidden").length,
     },

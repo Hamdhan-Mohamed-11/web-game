@@ -31,6 +31,10 @@
     font-family:'Inter', system-ui, sans-serif;
     color:var(--ink);
     display:flex;
+    /* Without this the <footer> is a sibling flex ITEM of .card and sits
+       beside it -- which is why the credit line floated to the right of
+       the card on a wide screen. Row is the flex default. */
+    flex-direction:column;
     align-items:center;
     justify-content:center;
     padding:32px 18px;

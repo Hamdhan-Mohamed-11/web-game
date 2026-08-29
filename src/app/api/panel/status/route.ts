@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getServiceSupabaseClient } from "@/lib/supabase/serverClient";
 
-const STATUSES = new Set(["new", "starred", "answered", "hidden"]);
+const STATUSES = new Set(["new", "shortlisted", "answered", "hidden"]);
 
 /**
  * Moves one question between queue states.

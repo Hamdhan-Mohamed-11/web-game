@@ -1,136 +1,62 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import BrandMark from "@/components/shared/BrandMark";
-import Button from "@/components/shared/Button";
+import Button, { buttonClassName } from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
-
-interface PanelQuestion {
-  id: string;
-  question: string;
-  askerName: string | null;
-  status: "new" | "starred" | "answered" | "hidden";
-  createdAt: string;
-}
-
-interface PanelData {
-  questions: PanelQuestion[];
-  totals: { all: number; new: number; starred: number; answered: number; hidden: number };
-}
-
-/** Fast enough to feel live on stage, slow enough not to hammer the box. */
-const REFRESH_MS = 6000;
+import { timeAgo, usePanelQueue } from "@/lib/panel/usePanelQueue";
 
 /**
- * Module-level so the polling effect below can own its own async function.
- * An effect that calls a setState-bearing callback from its dependency list
- * is what react-hooks/set-state-in-effect exists to catch; the same shape is
- * used by useNetworkingDashboard.
+ * The screener's desk — stage one of two.
+ *
+ * Everything the audience sends lands here. The screener reads the lot and
+ * hands a few to the moderator; sending one makes it leave this page and
+ * appear on /panel/moderator, which is the point. The first version starred
+ * questions in place, and pressing the button looked like the question had
+ * gone nowhere because it hadn't.
  */
-async function fetchPanelData(): Promise<PanelData | { authError: true } | null> {
-  const res = await fetch("/api/panel/admin-data", { cache: "no-store" });
-  if (res.status === 401) return { authError: true };
-  const body = await res.json();
-  if (!res.ok) throw new Error(body?.error ?? "Couldn't load");
-  return body as PanelData;
-}
 
 const TABS = [
-  { key: "new", label: "New" },
-  { key: "starred", label: "Starred" },
+  { key: "new", label: "To read" },
+  { key: "shortlisted", label: "Sent to moderator" },
   { key: "answered", label: "Answered" },
-  { key: "hidden", label: "Hidden" },
+  { key: "hidden", label: "Discarded" },
   { key: "all", label: "All" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
 
-function timeAgo(iso: string): string {
-  const secs = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  if (secs < 60) return "just now";
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
-  return `${Math.floor(mins / 60)}h ago`;
-}
-
-export default function PanelModeratorPage() {
-  const [data, setData] = useState<PanelData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export default function PanelScreenerPage() {
+  const { data, error, busyId, move } = usePanelQueue();
   const [tab, setTab] = useState<TabKey>("new");
-  const [busyId, setBusyId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function poll() {
-      try {
-        const next = await fetchPanelData();
-        if (cancelled || !next) return;
-        if ("authError" in next) {
-          setError("Signed out — open /admin/login and sign in again.");
-          return;
-        }
-        setData(next);
-        setError(null);
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Couldn't load");
-      }
-    }
-
-    poll();
-    const t = setInterval(poll, REFRESH_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(t);
-    };
-  }, []);
-
-  const reload = useCallback(() => {
-    fetchPanelData()
-      .then((next) => {
-        if (next && !("authError" in next)) setData(next);
-      })
-      .catch(() => undefined);
-  }, []);
-
-  async function setStatus(id: string, status: PanelQuestion["status"]) {
-    setBusyId(id);
-    // Optimistic: a moderator tapping through a queue on stage should never
-    // watch a spinner. The poll reconciles a few seconds later either way.
-    setData((d) =>
-      d ? { ...d, questions: d.questions.map((q) => (q.id === id ? { ...q, status } : q)) } : d
-    );
-    try {
-      const res = await fetch("/api/panel/status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, status }),
-      });
-      if (!res.ok) throw new Error("Update failed");
-      reload();
-    } catch {
-      setError("That didn't save — check your connection.");
-      reload();
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  const visible =
-    data?.questions.filter((q) => (tab === "all" ? true : q.status === tab)) ?? [];
+  // Oldest first while screening, so nobody who asked early gets buried
+  // under a late rush and never read.
+  const visible = (data?.questions ?? [])
+    .filter((q) => (tab === "all" ? true : q.status === tab))
+    .sort((a, b) => (tab === "new" ? a.createdAt.localeCompare(b.createdAt) : b.createdAt.localeCompare(a.createdAt)));
 
   return (
-    <main className="min-h-screen bg-cream-50 px-4 pb-16 pt-8">
+    <main className="min-h-screen bg-cream-50 px-4 pb-16 pt-6">
       <div className="mx-auto w-full max-w-3xl">
         <BrandMark size="compact" />
 
-        <h1 className="mt-5 text-center font-display text-2xl font-bold text-navy-900">
-          Ask the panel — moderator
+        <h1 className="mt-4 text-center font-display text-2xl font-bold text-navy-900">
+          Question screening
         </h1>
-        <p className="mt-2 text-center text-sm text-ink-600">
-          Questions arrive from the printed QR codes. Nothing here is ever
-          deleted; hiding is reversible.
+        <p className="mx-auto mt-2 max-w-md text-center text-sm text-ink-600">
+          Everything the audience sends arrives here. Pick the ones worth
+          asking and pass them to the moderator.
         </p>
+
+        <div className="mt-4 flex justify-center">
+          <Link href="/panel/moderator" className={buttonClassName("outline", "px-4 py-2 text-sm")}>
+            Moderator view
+            <span className="ml-2 tabular-nums text-gold-700">{data?.totals.shortlisted ?? 0}</span>
+            <span aria-hidden="true"> →</span>
+          </Link>
+        </div>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {TABS.map((t) => {
@@ -166,7 +92,7 @@ export default function PanelModeratorPage() {
           <Card className="mt-6 p-8 text-center">
             <p className="text-ink-600">
               {tab === "new"
-                ? "No new questions yet. They'll appear here as people scan."
+                ? "Nothing waiting. New questions appear here as people scan."
                 : "Nothing in this list."}
             </p>
           </Card>
@@ -175,11 +101,7 @@ export default function PanelModeratorPage() {
         <ul className="mt-6 flex flex-col gap-3">
           {visible.map((q) => (
             <li key={q.id}>
-              <Card
-                className={`p-5 ${q.status === "starred" ? "ring-2 ring-gold-500" : ""} ${
-                  q.status === "hidden" ? "opacity-60" : ""
-                }`}
-              >
+              <Card className={`p-5 ${q.status === "hidden" ? "opacity-60" : ""}`}>
                 <p className="text-lg leading-snug text-navy-900">{q.question}</p>
 
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-600">
@@ -189,45 +111,47 @@ export default function PanelModeratorPage() {
                   {q.status !== "new" && (
                     <>
                       <span aria-hidden="true">·</span>
-                      <span className="uppercase tracking-[0.12em]">{q.status}</span>
+                      <span className="uppercase tracking-[0.12em]">
+                        {q.status === "shortlisted" ? "with the moderator" : q.status}
+                      </span>
                     </>
                   )}
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {q.status !== "starred" && (
+                  {q.status !== "shortlisted" && q.status !== "answered" && (
                     <Button
                       variant="gold"
-                      onClick={() => setStatus(q.id, "starred")}
+                      onClick={() => move(q.id, "shortlisted")}
                       disabled={busyId === q.id}
                       className="px-3 py-2 text-xs"
                     >
-                      ★ Star for the panel
+                      Send to moderator →
                     </Button>
                   )}
-                  {q.status !== "answered" && (
+                  {q.status === "shortlisted" && (
                     <Button
                       variant="outline"
-                      onClick={() => setStatus(q.id, "answered")}
+                      onClick={() => move(q.id, "new")}
                       disabled={busyId === q.id}
                       className="px-3 py-2 text-xs"
                     >
-                      Mark answered
+                      Pull back
                     </Button>
                   )}
                   {q.status !== "hidden" ? (
                     <Button
                       variant="danger"
-                      onClick={() => setStatus(q.id, "hidden")}
+                      onClick={() => move(q.id, "hidden")}
                       disabled={busyId === q.id}
                       className="px-3 py-2 text-xs"
                     >
-                      Hide
+                      Discard
                     </Button>
                   ) : (
                     <Button
                       variant="outline"
-                      onClick={() => setStatus(q.id, "new")}
+                      onClick={() => move(q.id, "new")}
                       disabled={busyId === q.id}
                       className="px-3 py-2 text-xs"
                     >
